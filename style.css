@@ -143,36 +143,80 @@ body {
 
 
 /* ================== SIDE MENU ================== */
+/* ================= MENU ================= */
 
 .side-menu {
     position: fixed;
     top: 0;
-    right: -250px;
-
-    width: 250px;
+    right: -260px;
+    width: 260px;
     height: 100%;
 
-    background: #111;
+    background: #0f0f0f;
     padding: 20px;
 
     transition: 0.3s;
     z-index: 10;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .side-menu.active {
     right: 0;
 }
 
-.side-menu button {
-    margin-top: 20px;
-    padding: 12px;
-
-    width: 100%;
-    background: #ff4d4d;
-    border: none;
-    color: white;
+/* TITLE */
+.menu-title {
+    margin: 0 0 20px;
 }
 
+/* USER CARD */
+.menu-user {
+    background: #111;
+    padding: 15px;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* AVATAR */
+.menu-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+
+    background: #ff4d4d;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: bold;
+}
+
+/* USERNAME */
+.menu-username {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+    margin-top: auto;
+
+    padding: 12px;
+    border: none;
+
+    background: #ff4d4d;
+    color: white;
+
+    border-radius: 8px;
+    cursor: pointer;
+}
 
 /* ================== OVERLAY ================== */
 
@@ -195,21 +239,74 @@ body {
 
 /* ================== STORY VIEWER ================== */
 
+/* FULL SCREEN VIEWER */
 .story-viewer {
     position: fixed;
     top: 0;
     left: 0;
-
     width: 100%;
     height: 100%;
 
     background: black;
+    z-index: 999;
 
     display: flex;
     justify-content: center;
     align-items: center;
+}
 
-    z-index: 20;
+/* CONTENT */
+.viewer-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* CLOSE BUTTON */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 22px;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* USER HEADER */
+.story-header {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    color: white;
+    z-index: 10;
+}
+
+/* STORY BODY */
+.story-body {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* IMAGE / VIDEO */
+.story-media {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: black;
+}
+
+/* TEXT STORY */
+.story-text {
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    padding: 20px;
 }
 
 .hidden {
@@ -302,4 +399,33 @@ body {
 .status-circle.seen {
     border: 3px solid grey;
     opacity: 0.6;
+}
+
+.tap-zone {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 5;
+}
+
+.tap-zone.left {
+    left: 0;
+}
+
+.tap-zone.right {
+    right: 0;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 20px;
+    right: 60px;
+
+    font-size: 20px;
+    cursor: pointer;
+
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    border-radius: 50%;
 }

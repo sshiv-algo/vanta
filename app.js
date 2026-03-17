@@ -1,3 +1,12 @@
+// ================== GLOBAL ==================
+
+let currentStories = []
+let currentIndex = 0
+let storyTimer = null
+let isLongPress = false
+let touchTimer = null
+
+
 // ================== VIEWED STORIES ==================
 
 function getViewedStories() {
@@ -42,6 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.display = "flex"
     }
 
+    setupViewerControls()
+    loadMenuUser()
 })
 
 // SET GENDER
@@ -66,7 +77,6 @@ async function postStory() {
     let mediaUrl = null
 
     if (imageFile) {
-
         const fileName = Date.now() + "_" + imageFile.name
 
         const { error } = await client.storage
@@ -85,16 +95,14 @@ async function postStory() {
     let expires = new Date()
     expires.setHours(expires.getHours() + 24)
 
-    const { error } = await client
-        .from("stories")
-        .insert({
-            username: username,
-            gender: localStorage.getItem("vanta_gender"),
-            text_content: text,
-            media_url: mediaUrl,
-            created_at: new Date(),
-            expires_at: expires
-        })
+    const { error } = await client.from("stories").insert({
+        username,
+        gender: localStorage.getItem("vanta_gender"),
+        text_content: text,
+        media_url: mediaUrl,
+        created_at: new Date(),
+        expires_at: expires
+    })
 
     if (error) {
         console.error(error)
@@ -105,7 +113,7 @@ async function postStory() {
     document.getElementById("storyText").value = ""
     document.getElementById("storyImage").value = ""
 
-    await loadStories()
+    loadStories()
 }
 
 
@@ -121,86 +129,60 @@ async function loadStories() {
         .gt("expires_at", now)
         .order("created_at", { ascending: true })
 
-    if (error) {
-        console.error(error)
-        return
-    }
+    if (error) return console.error(error)
 
     const container = document.getElementById("stories")
     container.innerHTML = ""
 
     const viewed = getViewedStories()
 
-
-    // ================== YOUR STORY ==================
-
-    const yourStories = data.filter(story => story.username === username)
-    const yourStoryDiv = document.querySelector(".your-story")
-
-    const yourRingClass = viewed[username] ? "seen" : "unseen"
+    // YOUR STORY
+    const yourStories = data.filter(s => s.username === username)
+    const yourDiv = document.querySelector(".your-story")
 
     if (yourStories.length > 0) {
-
-        yourStoryDiv.innerHTML = `
-            <div class="status-circle ${yourRingClass}">${username[0]}</div>
+        yourDiv.innerHTML = `
+            <div class="status-circle">${username[0]}</div>
             <div class="status-text">
                 <b>Your Story</b>
                 <p>${yourStories.length} update(s)</p>
             </div>
         `
-
-        yourStoryDiv.onclick = () => openStorySequence(yourStories, 0)
-
+        yourDiv.onclick = () => openStorySequence(yourStories, 0)
     } else {
-
-        yourStoryDiv.innerHTML = `
+        yourDiv.innerHTML = `
             <div class="status-circle plus">+</div>
             <div class="status-text">
                 <b>Your Story</b>
                 <p>Tap to add</p>
             </div>
         `
-
-        yourStoryDiv.onclick = openUpload
+        yourDiv.onclick = openUpload
     }
 
-
-    // ================== OTHER USERS ==================
-
+    // OTHER USERS
     const users = {}
 
-    data.forEach(story => {
-        if (story.username === username) return
-
-        if (!users[story.username]) {
-            users[story.username] = []
-        }
-
-        users[story.username].push(story)
+    data.forEach(s => {
+        if (s.username === username) return
+        if (!users[s.username]) users[s.username] = []
+        users[s.username].push(s)
     })
 
-    const unseenUsers = []
-    const seenUsers = []
+    const sorted = [
+        ...Object.keys(users).filter(u => !viewed[u]),
+        ...Object.keys(users).filter(u => viewed[u])
+    ]
 
-    Object.keys(users).forEach(user => {
-        if (viewed[user]) {
-            seenUsers.push(user)
-        } else {
-            unseenUsers.push(user)
-        }
-    })
+    sorted.forEach(user => {
 
-    const sortedUsers = [...unseenUsers, ...seenUsers]
-
-    sortedUsers.forEach(user => {
-
-        const ringClass = viewed[user] ? "seen" : "unseen"
+        const ring = viewed[user] ? "seen" : "unseen"
 
         const div = document.createElement("div")
         div.className = "status-item"
 
         div.innerHTML = `
-            <div class="status-circle ${ringClass}">${user[0]}</div>
+            <div class="status-circle ${ring}">${user[0]}</div>
             <div class="status-text">
                 <b>${user}</b>
                 <p>View story</p>
@@ -214,34 +196,63 @@ async function loadStories() {
 }
 
 
-// ================== OPEN STORY ==================
+// ================== STORY VIEW ==================
 
 function openStory(story) {
-
+    console.log("Story object:", story)
     const viewer = document.getElementById("viewer")
 
+    const isOwner = story.username === username
+
     const created = new Date(story.created_at)
-    const now = new Date()
-    const diff = Math.floor((now - created) / 1000 / 60 / 60)
+    const diff = Math.floor((Date.now() - created) / 3600000)
 
     const timeText = diff === 0 ? "Just now" : `${diff}h ago`
 
-    document.getElementById("viewerUser").innerHTML =
+    document.getElementById("viewerUser").innerText =
         `${story.username} • ${timeText}`
 
-    let content = ""
-
-    if (story.media_url) {
-        content += `<img src="${story.media_url}" style="max-width:300px;">`
-    }
-
-    if (story.text_content) {
-        content += `<p>${story.text_content}</p>`
-    }
+    let content = story.media_url
+        ? `<img src="${story.media_url}" class="story-media">`
+        : `<div class="story-text">${story.text_content}</div>`
 
     document.getElementById("viewerText").innerHTML = content
 
+    // REMOVE OLD DELETE BTN
+    const old = document.querySelector(".delete-btn")
+    if (old) old.remove()
+
+    // ADD DELETE IF OWNER
+    if (isOwner) {
+        const btn = document.createElement("div")
+        btn.className = "delete-btn"
+        btn.innerText = "🗑"
+        btn.onclick = () => deleteStory(story.id)
+        viewer.appendChild(btn)
+    }
+
     viewer.classList.remove("hidden")
+}
+
+
+// ================== DELETE STORY ==================
+
+async function deleteStory(id) {
+
+    if (!confirm("Delete this story?")) return
+
+    const { error } = await client
+        .from("stories")
+        .delete()
+        .eq("id", id)
+
+    if (error) {
+        console.error(error)
+        return alert("Delete failed")
+    }
+
+    closeViewer()
+    loadStories()
 }
 
 
@@ -249,18 +260,26 @@ function openStory(story) {
 
 function openStorySequence(stories, index) {
 
+    currentStories = stories
+    currentIndex = index
+
     if (!getViewedStories()[stories[0].username]) {
         markStoryViewed(stories[0].username)
         loadStories()
     }
 
-    const story = stories[index]
+    showStory()
+}
+
+function showStory() {
+
+    const story = currentStories[currentIndex]
     openStory(story)
 
-    const progressContainer = document.getElementById("storyProgress")
-    progressContainer.innerHTML = ""
+    const container = document.getElementById("storyProgress")
+    container.innerHTML = ""
 
-    stories.forEach((_, i) => {
+    currentStories.forEach((_, i) => {
 
         const bar = document.createElement("div")
         bar.className = "progress-bar"
@@ -268,34 +287,79 @@ function openStorySequence(stories, index) {
         const fill = document.createElement("div")
         fill.className = "progress-fill"
 
-        if (i < index) fill.style.width = "100%"
+        if (i < currentIndex) fill.style.width = "100%"
 
         bar.appendChild(fill)
-        progressContainer.appendChild(bar)
+        container.appendChild(bar)
     })
 
-    const currentFill = progressContainer.children[index].firstChild
+    const fill = container.children[currentIndex].firstChild
 
-    setTimeout(() => {
-        currentFill.style.width = "100%"
-    }, 50)
+    setTimeout(() => fill.style.width = "100%", 50)
 
-    setTimeout(() => {
-        if (index + 1 < stories.length) {
-            openStorySequence(stories, index + 1)
-        }
-    }, 4000)
+    clearTimeout(storyTimer)
+
+    storyTimer = setTimeout(nextStory, 4000)
 }
 
 
-// ================== CLOSE VIEWER ==================
+// ================== NAV ==================
+
+function nextStory() {
+    if (isLongPress) return
+
+    if (currentIndex + 1 < currentStories.length) {
+        currentIndex++
+        showStory()
+    } else {
+        closeViewer()
+    }
+}
+
+function prevStory() {
+    if (isLongPress) return
+    if (currentIndex > 0) {
+        currentIndex--
+        showStory()
+    }
+}
+
+
+// ================== HOLD ==================
+
+function pauseStory() {
+    isLongPress = true
+    clearTimeout(storyTimer)
+}
+
+function resumeStory() {
+    isLongPress = false
+    storyTimer = setTimeout(nextStory, 2000)
+}
+
+
+// ================== VIEWER CONTROLS ==================
+
+function setupViewerControls() {
+
+    const viewer = document.getElementById("viewer")
+
+    viewer.addEventListener("touchstart", pauseStory)
+    viewer.addEventListener("touchend", resumeStory)
+
+    viewer.addEventListener("mousedown", pauseStory)
+    viewer.addEventListener("mouseup", resumeStory)
+}
+
+
+// ================== CLOSE ==================
 
 function closeViewer() {
     document.getElementById("viewer").classList.add("hidden")
 }
 
 
-// ================== AUTO REFRESH ==================
+// ================== AUTO ==================
 
 setInterval(loadStories, 60000)
 
@@ -303,15 +367,9 @@ setInterval(loadStories, 60000)
 // ================== LOGOUT ==================
 
 window.logout = function () {
-    localStorage.removeItem("vanta_username")
-    localStorage.removeItem("vanta_gender")
+    localStorage.clear()
     location.reload()
 }
-
-
-// ================== INIT ==================
-
-loadStories()
 
 
 // ================== UI ==================
@@ -324,3 +382,14 @@ function toggleMenu() {
 function openUpload() {
     document.getElementById("uploadBox").classList.toggle("hidden")
 }
+
+function loadMenuUser() {
+    const u = localStorage.getItem("vanta_username")
+    if (!u) return
+    document.getElementById("menuUsername").innerText = u
+    document.getElementById("menuAvatar").innerText = u[0].toUpperCase()
+}
+
+
+// INIT
+loadStories()

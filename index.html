@@ -20,8 +20,18 @@
 
         <!-- SIDE MENU -->
         <div id="sideMenu" class="side-menu">
-            <h3>Menu</h3>
-            <button onclick="logout()">Logout</button>
+
+            <h3 class="menu-title">Menu</h3>
+
+            <!-- USER CARD -->
+            <div class="menu-user">
+                <div class="menu-avatar" id="menuAvatar">A</div>
+                <div class="menu-username" id="menuUsername">username</div>
+            </div>
+
+            <!-- LOGOUT -->
+            <button class="logout-btn" onclick="logout()">Logout</button>
+
         </div>
 
         <!-- OVERLAY -->
@@ -60,16 +70,18 @@
 
         <!-- STORY VIEWER -->
         <div id="viewer" class="story-viewer hidden">
-
+            <div class="tap-zone left" onclick="prevStory()"></div>
+            <div class="tap-zone right" onclick="nextStory()"></div>
             <div class="viewer-content">
 
-                <div id="storyProgress" class="story-progress"></div>
+                <div id="storyProgress"></div>
 
-                <h3 id="viewerUser"></h3>
+                <!-- CLOSE BUTTON -->
+                <div class="close-btn" onclick="closeViewer()">✕</div>
 
-                <div id="viewerText"></div>
+                <div id="viewerUser" class="story-header"></div>
 
-                <button onclick="closeViewer()">Close</button>
+                <div id="viewerText" class="story-body"></div>
 
             </div>
 
