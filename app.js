@@ -227,7 +227,14 @@ function openStory(story) {
         const btn = document.createElement("div")
         btn.className = "delete-btn"
         btn.innerText = "🗑"
-        btn.onclick = () => deleteStory(story.id)
+        btn.onclick = (e) => {
+            e.stopPropagation()
+            deleteStory(story.id)
+        }
+        btn.onmousedown = (e) => e.stopPropagation()
+        btn.onmouseup = (e) => e.stopPropagation()
+        btn.ontouchstart = (e) => e.stopPropagation()
+        btn.ontouchend = (e) => e.stopPropagation()
         viewer.appendChild(btn)
     }
 
@@ -239,22 +246,32 @@ function openStory(story) {
 
 async function deleteStory(id) {
 
-    if (!confirm("Delete this story?")) return
+    console.log("DELETE CLICKED:", id, typeof id)
 
-    const { error } = await client
+    const { data, error } = await client
         .from("stories")
         .delete()
-        .eq("id", id)
+        .match({ id: id })
+        .select()
+
+    console.log("RESULT:", data)
+    console.log("ERROR:", error)
 
     if (error) {
-        console.error(error)
-        return alert("Delete failed")
+        alert("Delete error")
+        return
     }
+
+    if (!data || data.length === 0) {
+        alert("No row deleted — mismatch issue")
+        return
+    }
+
+    alert("Deleted successfully")
 
     closeViewer()
     loadStories()
 }
-
 
 // ================== STORY SEQUENCE ==================
 
@@ -355,6 +372,7 @@ function setupViewerControls() {
 // ================== CLOSE ==================
 
 function closeViewer() {
+    clearTimeout(storyTimer)
     document.getElementById("viewer").classList.add("hidden")
 }
 
