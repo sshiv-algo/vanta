@@ -640,6 +640,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     border-radius: 50%;
     z-index: 10;
     transition: all 0.2s ease;
@@ -667,6 +668,9 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
+    color: white;
+    display: flex;
+    align-items: center;
     transition: all 0.2s ease;
 }
 

@@ -7,6 +7,10 @@ let storyTimer = null
 let isLongPress = false
 let touchTimer = null
 
+// Swipe tracking
+let startY = 0
+let endY = 0
+
 
 // ================== VIEWED STORIES ==================
 
@@ -256,7 +260,7 @@ function openStory(story) {
             .map(v => typeof v === "string" ? { username: v } : v)
             .filter(v => v.username !== username)
             .length
-        eye.innerText = `👁 ${count}`
+        eye.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> ${count}`
 
         eye.onclick = (e) => {
             e.stopPropagation()
@@ -273,7 +277,7 @@ function openStory(story) {
     if (isOwner) {
         const btn = document.createElement("div")
         btn.className = "delete-btn"
-        btn.innerText = "🗑"
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
         btn.onclick = (e) => {
             e.stopPropagation()
             deleteStory(story.id)
@@ -447,7 +451,7 @@ function updateViewerCount() {
             .filter(v => v.username !== username)
             .length
 
-        eye.innerText = `👁 ${count}`
+        eye.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> ${count}`
     }
 }
 
@@ -457,11 +461,48 @@ function setupViewerControls() {
 
     const viewer = document.getElementById("viewer")
 
-    viewer.addEventListener("touchstart", pauseStory)
-    viewer.addEventListener("touchend", resumeStory)
+    // Disable default touch behavior to prevent pull-to-refresh when swiping
+    viewer.addEventListener("touchmove", (e) => {
+        if (e.cancelable) e.preventDefault()
+    }, { passive: false })
+
+    viewer.addEventListener("touchstart", (e) => {
+        startY = e.touches[0].clientY
+        pauseStory()
+    })
+
+    viewer.addEventListener("touchend", (e) => {
+        endY = e.changedTouches[0].clientY
+        const deltaY = startY - endY
+
+        // Swipe up
+        if (deltaY > 50) {
+            const story = currentStories[currentIndex]
+            if (story && story.username === username) {
+                openViewerList()
+                return // Don't resume story, wait for list to close
+            }
+        }
+
+        resumeStory()
+    })
 
     viewer.addEventListener("mousedown", pauseStory)
     viewer.addEventListener("mouseup", resumeStory)
+
+    // Swipe down to close viewer list
+    const viewerSheet = document.getElementById("viewerList")
+    
+    viewerSheet.addEventListener("touchstart", (e) => {
+        startY = e.touches[0].clientY
+    }, { passive: true })
+
+    viewerSheet.addEventListener("touchend", (e) => {
+        endY = e.changedTouches[0].clientY
+        if (endY - startY > 50) { // Swipe down
+            closeViewerList()
+        }
+    })
 }
 
 function openViewerList() {
