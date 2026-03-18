@@ -272,6 +272,19 @@ function openStory(story) {
     }
 
     document.getElementById("viewerText").innerHTML = content
+    
+    // REPLY BOX
+    const replyBox = document.getElementById("replyBox")
+    const replyInput = document.getElementById("replyInput")
+    if (replyBox) {
+        if (isOwner) {
+            replyBox.classList.add("hidden")
+        } else {
+            replyBox.classList.remove("hidden")
+            if (replyInput) replyInput.value = ""
+        }
+    }
+
     // REMOVE OLD EYE
     const oldEye = document.querySelector(".view-count")
     if (oldEye) oldEye.remove()
@@ -675,6 +688,234 @@ function loadMenuUser() {
     document.getElementById("menuAvatar").innerText = u[0].toUpperCase()
 }
 
+
+// ================== CHAT SYSTEM ==================
+
+async function sendReply() {
+    const replyInput = document.getElementById("replyInput")
+    const message = replyInput.value.trim()
+    if (!message) return
+
+    const story = currentStories[currentIndex]
+    const receiver = story.username
+
+    if (receiver === username) {
+        showToast("You cannot reply to your own story.")
+        return
+    }
+
+    // 1. Find or create conversation
+    let { data: convo, error: convoErr } = await client
+        .from("conversations")
+        .select("id")
+        .or(`and(user1.eq.${username},user2.eq.${receiver}),and(user1.eq.${receiver},user2.eq.${username})`)
+        .single()
+
+    let convoId;
+
+    if (convoErr || !convo) {
+        const { data: newConvo, error: insErr } = await client
+            .from("conversations")
+            .insert({ user1: username, user2: receiver })
+            .select()
+            .single()
+        
+        if (insErr) return
+        convoId = newConvo.id
+    } else {
+        convoId = convo.id
+    }
+
+    // 2. Insert message
+    await client.from("messages").insert({
+        conversation_id: convoId,
+        sender: username,
+        message: message
+    })
+
+    // 3. Clear and Notify
+    replyInput.value = ""
+    showToast("Message sent!")
+}
+
+function showToast(text) {
+    const container = document.getElementById("toastContainer")
+    if (!container) return
+    
+    const toast = document.createElement("div")
+    toast.className = "toast"
+    toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> ${text}`
+    
+    container.appendChild(toast)
+    setTimeout(() => {
+        toast.style.opacity = "0"
+        toast.style.transform = "translateY(-20px)"
+        setTimeout(() => toast.remove(), 400)
+    }, 3000)
+}
+
+async function checkUnreadGlobal() {
+    const dot = document.getElementById("unreadDot")
+    if (!dot) return
+
+    const lastCheck = localStorage.getItem("last_inbox_check") || new Date(0).toISOString()
+    
+    const { data, error } = await client
+        .from("messages")
+        .select("id")
+        .neq("sender", username)
+        .gt("created_at", lastCheck)
+        .limit(1)
+
+    if (data && data.length > 0) {
+        dot.classList.remove("hidden")
+    } else {
+        dot.classList.add("hidden")
+    }
+}
+
+async function clearChatMessages(convoId) {
+    if (!convoId) return
+    await client.from("messages").delete().eq("conversation_id", convoId)
+}
+
+async function loadChats() {
+    const list = document.getElementById("chatList")
+    if (!list) return
+
+    localStorage.setItem("last_inbox_check", new Date().toISOString())
+    if (document.getElementById("unreadDot")) {
+        document.getElementById("unreadDot").classList.add("hidden")
+    }
+
+    const { data, error } = await client
+        .from("conversations")
+        .select("*")
+        .or(`user1.eq.${username},user2.eq.${username}`)
+        .order("created_at", { ascending: false })
+
+    if (error) {
+        list.innerHTML = `<p style="text-align:center; padding: 20px; color: #ef4444;">Error loading chats.</p>`
+        return
+    }
+
+    if (!data || data.length === 0) {
+        list.innerHTML = `<p style="text-align:center; padding: 30px; color: #666; font-size: 14px;">No messages yet.</p>`
+        return
+    }
+
+    list.innerHTML = ""
+    for (const convo of data) {
+        const otherUser = convo.user1 === username ? convo.user2 : convo.user1
+        
+        // Check if this specific chat has unread messages
+        const lastRead = localStorage.getItem(`last_read_${convo.id}`) || new Date(0).toISOString()
+        const { count } = await client
+            .from("messages")
+            .select("*", { count: 'exact', head: true })
+            .eq("conversation_id", convo.id)
+            .neq("sender", username)
+            .gt("created_at", lastRead)
+
+        const unreadIndicator = count > 0 ? `<div class="unread-indicator"></div>` : ""
+
+        const item = document.createElement("div")
+        item.className = "chat-item"
+        item.onclick = () => openChat(convo.id, otherUser)
+
+        item.innerHTML = `
+            <div class="chat-avatar">${otherUser[0].toUpperCase()}</div>
+            <div class="chat-info">
+                <div class="chat-name">${otherUser}</div>
+                <div class="chat-preview">Tap to open chat</div>
+            </div>
+            ${unreadIndicator}
+        `
+        list.appendChild(item)
+    }
+}
+
+function openChat(convoId, otherUser) {
+    localStorage.setItem("chat_id", convoId)
+    localStorage.setItem("chat_user", otherUser)
+    window.location.href = "chat.html"
+}
+
+async function loadMessages() {
+    const convoId = localStorage.getItem("chat_id")
+    const otherUser = localStorage.getItem("chat_user")
+    const list = document.getElementById("messagesList")
+    const headerTitle = document.getElementById("chatActiveUser")
+
+    if (!convoId || !list) return
+    if (headerTitle) headerTitle.innerText = otherUser
+
+    // Mark as read
+    localStorage.setItem(`last_read_${convoId}`, new Date().toISOString())
+
+    const { data, error } = await client
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", convoId)
+        .order("created_at", { ascending: true })
+
+    if (error) return
+
+    list.innerHTML = ""
+    data.forEach(msg => {
+        const isMe = msg.sender === username
+        const wrapper = document.createElement("div")
+        wrapper.className = `message-wrapper ${isMe ? "me" : "other"}`
+        wrapper.innerHTML = `<div class="message-bubble">${msg.message}</div>`
+        list.appendChild(wrapper)
+    })
+    
+    list.scrollTop = list.scrollHeight
+}
+
+async function sendChat() {
+    const input = document.getElementById("chatInput")
+    const message = input.value.trim()
+    const convoId = localStorage.getItem("chat_id")
+    if (!message || !convoId) return
+
+    input.value = ""
+
+    const { error } = await client
+        .from("messages")
+        .insert({
+            conversation_id: convoId,
+            sender: username,
+            message: message
+        })
+
+    if (error) {
+        console.error("Error sending message:", error)
+        return
+    }
+
+    loadMessages()
+}
+
+// Initialize based on page
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes("inbox.html")) {
+        loadChats()
+    } else if (window.location.pathname.includes("chat.html")) {
+        const cid = localStorage.getItem("chat_id")
+        
+        // Vanishing Mode: Wipe on enter and wipe on exit
+        clearChatMessages(cid) 
+        window.addEventListener("beforeunload", () => clearChatMessages(cid))
+
+        loadMessages()
+        setInterval(loadMessages, 3000)
+    } else {
+        // Main page unread polling
+        checkUnreadGlobal()
+        setInterval(checkUnreadGlobal, 5000)
+    }
+})
 
 // INIT
 loadStories()
