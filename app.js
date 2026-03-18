@@ -192,14 +192,39 @@ async function loadStories() {
         users[s.username].push(s)
     })
 
+    // Inject Misto Official Updates Story
+    users["Misto Official"] = [{
+        id: "misto-official",
+        username: "Misto Official",
+        text_content: "🚀 What's New:\n\n✨ Swipe up on your story to see viewers\n✨ Add text captions to your image stories\n✨ Sleek new UI design and animations\n\nEnjoy the new Misto! 🥷",
+        media_url: null,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 86400000).toISOString(),
+        viewers: []
+    }]
+
+    const unseen = Object.keys(users).filter(u => !viewed[u])
+    const seen = Object.keys(users).filter(u => viewed[u])
+
+    // Ensure Misto Official is always at the front of its respective category
+    const sortOfficialFirst = (arr) => arr.sort((a, b) => {
+        if (a === "Misto Official") return -1
+        if (b === "Misto Official") return 1
+        return 0
+    })
+
     const sorted = [
-        ...Object.keys(users).filter(u => !viewed[u]),
-        ...Object.keys(users).filter(u => viewed[u])
+        ...sortOfficialFirst(unseen),
+        ...sortOfficialFirst(seen)
     ]
 
     sorted.forEach(user => {
 
         const ring = viewed[user] ? "seen" : "unseen"
+
+        const badge = user === "Misto Official" 
+            ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>` 
+            : ""
 
         const div = document.createElement("div")
         div.className = "status-item"
@@ -207,7 +232,7 @@ async function loadStories() {
         div.innerHTML = `
             <div class="status-circle ${ring}">${user[0]}</div>
             <div class="status-text">
-                <b>${user}</b>
+                <b>${user}${badge}</b>
                 <p>View story</p>
             </div>
         `
@@ -229,12 +254,22 @@ function openStory(story) {
 
     const timeText = formatTime(story.created_at)
 
-    document.getElementById("viewerUser").innerText =
-        `${story.username} • ${timeText}`
+    const badge = story.username === "Misto Official" 
+        ? `<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px; margin-left: 4px; margin-right: 2px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>` 
+        : ""
 
-    let content = story.media_url
-        ? `<img src="${story.media_url}" class="story-media">`
-        : `<div class="story-text">${story.text_content}</div>`
+    document.getElementById("viewerUser").innerHTML =
+        `${story.username}${badge} • ${timeText}`
+
+    let content = ""
+    if (story.media_url) {
+        content += `<img src="${story.media_url}" class="story-media">`
+    }
+    if (story.text_content) {
+        // If there's an image, style it as a caption overlay. If text only, style as full centered text.
+        const textClass = story.media_url ? "story-caption" : "story-text"
+        content += `<div class="${textClass}">${story.text_content}</div>`
+    }
 
     document.getElementById("viewerText").innerHTML = content
     // REMOVE OLD EYE
@@ -326,6 +361,9 @@ async function deleteStory(id) {
 
 
 async function addViewer(story) {
+
+    // Prevent counting viewers for the local fake story
+    if (story.id === "misto-official") return
 
     const { data } = await client
         .from("stories")
@@ -430,14 +468,46 @@ function prevStory() {
 
 // ================== HOLD ==================
 
+let pressStartTime = 0;
+
 function pauseStory() {
     isLongPress = true
+    pressStartTime = Date.now()
     clearTimeout(storyTimer)
+
+    // Pause the progress bar animation visually
+    const container = document.getElementById("storyProgress")
+    if (container && container.children[currentIndex]) {
+        const fill = container.children[currentIndex].firstChild
+        if (fill) {
+            fill.style.width = window.getComputedStyle(fill).width
+            fill.style.transition = "none"
+        }
+    }
 }
 
 function resumeStory() {
-    isLongPress = false
+    const pressDuration = Date.now() - (pressStartTime || Date.now())
+    
+    // Only block the next expected 'click' event if this was actually a long hold
+    if (pressDuration > 200) {
+        setTimeout(() => isLongPress = false, 100) // Keep true so any queued click event is ignored
+    } else {
+        isLongPress = false
+    }
+
     storyTimer = setTimeout(nextStory, 2000)
+
+    // Resume the progress bar animation visually
+    const container = document.getElementById("storyProgress")
+    if (container && container.children[currentIndex]) {
+        const fill = container.children[currentIndex].firstChild
+        if (fill) {
+            void fill.offsetWidth // Force browser reflow to apply transition immediately
+            fill.style.transition = "width 2s linear"
+            fill.style.width = "100%"
+        }
+    }
 }
 
 function updateViewerCount() {
