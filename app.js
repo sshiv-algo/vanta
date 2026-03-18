@@ -500,6 +500,11 @@ function pauseStory() {
 }
 
 function resumeStory() {
+    // If user is still typing, don't resume
+    if (document.activeElement === document.getElementById("replyInput")) {
+        return
+    }
+
     const pressDuration = Date.now() - (pressStartTime || Date.now())
     
     // Only block the next expected 'click' event if this was actually a long hold
@@ -693,10 +698,22 @@ function loadMenuUser() {
 
 async function sendReply() {
     const replyInput = document.getElementById("replyInput")
+    if (!replyInput) return
+    
     const message = replyInput.value.trim()
     if (!message) return
 
+    if (!currentStories || currentStories.length === 0) {
+        showToast("Error: No story found.")
+        return
+    }
+
     const story = currentStories[currentIndex]
+    if (!story) {
+        showToast("Error: Story expired or missing.")
+        return
+    }
+
     const receiver = story.username
 
     if (receiver === username) {
@@ -720,21 +737,30 @@ async function sendReply() {
             .select()
             .single()
         
-        if (insErr) return
+        if (insErr) {
+            showToast("Failed to start conversation.")
+            return
+        }
         convoId = newConvo.id
     } else {
         convoId = convo.id
     }
 
     // 2. Insert message
-    await client.from("messages").insert({
+    const { error: msgErr } = await client.from("messages").insert({
         conversation_id: convoId,
         sender: username,
         message: message
     })
 
+    if (msgErr) {
+        showToast("Failed to send message.")
+        return
+    }
+
     // 3. Clear and Notify
     replyInput.value = ""
+    replyInput.blur() // This will trigger resumeStory()
     showToast("Message sent!")
 }
 
