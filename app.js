@@ -1,5 +1,6 @@
 // ================== GLOBAL ==================
-
+let currentViewers = []
+let isViewerOpen = false
 let currentStories = []
 let currentIndex = 0
 let storyTimer = null
@@ -141,22 +142,40 @@ async function loadStories() {
     const yourDiv = document.querySelector(".your-story")
 
     if (yourStories.length > 0) {
+
         yourDiv.innerHTML = `
+        <div style="position:relative;">
             <div class="status-circle">${username[0]}</div>
-            <div class="status-text">
-                <b>Your Story</b>
-                <p>${yourStories.length} update(s)</p>
-            </div>
-        `
+
+            <!-- ➕ BUTTON -->
+            <div class="add-btn">+</div>
+        </div>
+
+        <div class="status-text">
+            <b>Your Story</b>
+            <p>${yourStories.length} update(s)</p>
+        </div>
+    `
+
+        // VIEW STORY (click anywhere)
         yourDiv.onclick = () => openStorySequence(yourStories, 0)
+
+        // ➕ CLICK (STOP PROPAGATION)
+        yourDiv.querySelector(".add-btn").onclick = (e) => {
+            e.stopPropagation()
+            openUpload()
+        }
+
     } else {
+
         yourDiv.innerHTML = `
-            <div class="status-circle plus">+</div>
-            <div class="status-text">
-                <b>Your Story</b>
-                <p>Tap to add</p>
-            </div>
-        `
+        <div class="status-circle plus">+</div>
+        <div class="status-text">
+            <b>Your Story</b>
+            <p>Tap to add</p>
+        </div>
+    `
+
         yourDiv.onclick = openUpload
     }
 
@@ -204,10 +223,7 @@ function openStory(story) {
 
     const isOwner = story.username === username
 
-    const created = new Date(story.created_at)
-    const diff = Math.floor((Date.now() - created) / 3600000)
-
-    const timeText = diff === 0 ? "Just now" : `${diff}h ago`
+    const timeText = formatTime(story.created_at)
 
     document.getElementById("viewerUser").innerText =
         `${story.username} • ${timeText}`
@@ -217,7 +233,38 @@ function openStory(story) {
         : `<div class="story-text">${story.text_content}</div>`
 
     document.getElementById("viewerText").innerHTML = content
+    // REMOVE OLD EYE
+    const oldEye = document.querySelector(".view-count")
+    if (oldEye) oldEye.remove()
 
+    // ADD ONLY FOR OWNER
+    if (isOwner) {
+
+        currentViewers = (story.viewers || []).map(v =>
+            typeof v === "string" ? { username: v, time: new Date().toISOString() } : v
+        )
+
+        // Migrate old string-format viewers to objects in DB
+        if ((story.viewers || []).some(v => typeof v === "string")) {
+            client.from("stories").update({ viewers: currentViewers }).eq("id", story.id)
+        }
+
+        const eye = document.createElement("div")
+        eye.className = "view-count"
+
+        const count = currentViewers
+            .map(v => typeof v === "string" ? { username: v } : v)
+            .filter(v => v.username !== username)
+            .length
+        eye.innerText = `👁 ${count}`
+
+        eye.onclick = (e) => {
+            e.stopPropagation()
+            openViewerList()
+        }
+
+        viewer.appendChild(eye)
+    }
     // REMOVE OLD DELETE BTN
     const old = document.querySelector(".delete-btn")
     if (old) old.remove()
@@ -273,6 +320,37 @@ async function deleteStory(id) {
     loadStories()
 }
 
+
+async function addViewer(story) {
+
+    const { data } = await client
+        .from("stories")
+        .select("viewers")
+        .eq("id", story.id)
+        .single()
+
+    let viewers = (data?.viewers || []).map(v =>
+        typeof v === "string" ? { username: v, time: null } : v
+    )
+
+    const already = viewers.find(v => v.username === username)
+
+    if (!already) {
+
+        viewers.push({
+            username: username,
+            time: new Date().toISOString()
+        })
+
+        await client
+            .from("stories")
+            .update({ viewers })
+            .eq("id", story.id)
+    }
+
+    currentViewers = viewers
+    updateViewerCount()
+}
 // ================== STORY SEQUENCE ==================
 
 function openStorySequence(stories, index) {
@@ -292,6 +370,10 @@ function showStory() {
 
     const story = currentStories[currentIndex]
     openStory(story)
+
+    if (story.username !== username) {
+        addViewer(story)
+    }
 
     const container = document.getElementById("storyProgress")
     container.innerHTML = ""
@@ -354,6 +436,20 @@ function resumeStory() {
     storyTimer = setTimeout(nextStory, 2000)
 }
 
+function updateViewerCount() {
+
+    const eye = document.querySelector(".view-count")
+
+    if (eye) {
+
+        const count = currentViewers
+            .map(v => typeof v === "string" ? { username: v } : v)
+            .filter(v => v.username !== username)
+            .length
+
+        eye.innerText = `👁 ${count}`
+    }
+}
 
 // ================== VIEWER CONTROLS ==================
 
@@ -368,7 +464,66 @@ function setupViewerControls() {
     viewer.addEventListener("mouseup", resumeStory)
 }
 
+function openViewerList() {
 
+    isViewerOpen = true
+    pauseStory()
+
+    const sheet = document.getElementById("viewerList")
+    const list = document.getElementById("viewerListContent")
+
+    list.innerHTML = ""
+
+    const filtered = currentViewers
+        .map(v => typeof v === "string"
+            ? { username: v, time: new Date().toISOString() }
+            : v
+        )
+        .filter(v => v.username !== username)
+
+    if (filtered.length === 0) {
+        list.innerHTML = "<p>No viewers yet</p>"
+    } else {
+
+        filtered.forEach(v => {
+
+            const div = document.createElement("div")
+            div.className = "viewer-item"
+
+            div.innerHTML = `
+                <div class="viewer-avatar">${v.username[0]}</div>
+                <div>
+                    <b>${v.username}</b><br>
+                    <small>${formatTime(v.time)}</small>
+                </div>
+            `
+
+            list.appendChild(div)
+        })
+    }
+
+    sheet.classList.add("active")
+}
+
+function closeViewerList() {
+    isViewerOpen = false
+    document.getElementById("viewerList").classList.remove("active")
+    resumeStory()
+}
+
+function formatTime(time) {
+
+    if (!time) return "Just now"
+    const diff = Date.now() - new Date(time).getTime()
+
+    const mins = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+
+    if (mins < 1) return "Just now"
+    if (mins === 1) return "1 minute ago"
+    if (mins < 60) return `${mins}m ago`
+    return `${hours}h ago`
+}
 // ================== CLOSE ==================
 
 function closeViewer() {

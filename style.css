@@ -430,3 +430,92 @@ body {
     border-radius: 50%;
     z-index: 10;
 }
+
+.view-count {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 14px;
+    border-radius: 20px;
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.viewer-sheet {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    z-index: 2000;
+    transition: 0.3s;
+}
+
+.viewer-sheet.active {
+    bottom: 0;
+}
+
+.viewer-sheet-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.viewer-sheet-content {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    border-radius: 15px 15px 0 0;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.viewer-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.viewer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #222;
+}
+
+.viewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ff4d4d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.add-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+
+    background: #ff4d4d;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 14px;
+    cursor: pointer;
+}
