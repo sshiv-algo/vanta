@@ -540,8 +540,9 @@ setInterval(loadStories, 60000)
 // ================== LOGOUT ==================
 
 window.logout = function () {
+    console.log("Logout clicked") // debug
     localStorage.clear()
-    location.reload()
+    window.location.href = "index.html"
 }
 
 
