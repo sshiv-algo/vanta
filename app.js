@@ -146,6 +146,8 @@ async function loadStories() {
     const yourDiv = document.querySelector(".your-story")
 
     if (yourStories.length > 0) {
+        const latestYourStory = yourStories[yourStories.length - 1]
+        const yourTime = formatTime(latestYourStory.created_at)
 
         yourDiv.innerHTML = `
         <div style="position:relative;">
@@ -157,7 +159,7 @@ async function loadStories() {
 
         <div class="status-text">
             <b>Your Story</b>
-            <p>${yourStories.length} update(s)</p>
+            <p>${yourStories.length} update(s) • ${yourTime}</p>
         </div>
     `
 
@@ -196,7 +198,7 @@ async function loadStories() {
     users["Misto Official"] = [{
         id: "misto-official",
         username: "Misto Official",
-        text_content: "🚀 What's New:\n\n✨ Swipe up on your story to see viewers\n✨ Add text captions to your image stories\n✨ Sleek new UI design and animations\n\nEnjoy the new Misto! 🥷",
+        text_content: "🚀 Misto Official v2.5:\n\n✨ 30s Vanish Mode: Privacy for your regular chats\n✨ 24h Story Replies: Never miss a reaction to your updates\n✨ Real-Time Sync: Instant disappears with smooth animations\n✨ Story Timestamps: See 'just now' or '5 min ago' on all stories\n\nEnjoy the most private Misto yet! 🥷",
         media_url: null,
         created_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 86400000).toISOString(),
@@ -226,6 +228,9 @@ async function loadStories() {
             ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>` 
             : ""
 
+        const latestStory = users[user][users[user].length - 1]
+        const timeStr = formatTime(latestStory.created_at)
+
         const div = document.createElement("div")
         div.className = "status-item"
 
@@ -233,7 +238,7 @@ async function loadStories() {
             <div class="status-circle ${ring}">${user[0]}</div>
             <div class="status-text">
                 <b>${user}${badge}</b>
-                <p>View story</p>
+                <p>View story • ${timeStr}</p>
             </div>
         `
 
@@ -750,11 +755,14 @@ async function sendReply() {
     const { error: msgErr } = await client.from("messages").insert({
         conversation_id: convoId,
         sender: username,
-        message: message
+        message: message,
+        is_story_reply: true,
+        seen_at: null
     })
 
     if (msgErr) {
-        showToast("Failed to send message.")
+        console.error("Story Reply Error:", msgErr)
+        showToast("Failed to send message. (Check console for error)")
         return
     }
 
@@ -802,7 +810,22 @@ async function checkUnreadGlobal() {
 
 async function clearChatMessages(convoId) {
     if (!convoId) return
-    await client.from("messages").delete().eq("conversation_id", convoId)
+    console.log("Vanish Mode Cleanup: Processing exit purge...")
+    
+    // Delete regular messages where seen_at is NOT NULL
+    // But KEEP story replies (they stay for 24h)
+    const { error } = await client
+        .from("messages")
+        .delete()
+        .eq("conversation_id", convoId)
+        .not("seen_at", "is", null)
+        .eq("is_story_reply", false)
+    
+    if (error) console.error("Exit Cleanup Error:", error)
+
+    // Background Cleanup: Delete story replies older than 24h
+    const dayAgo = new Date(Date.now() - 86400000).toISOString()
+    await client.from("messages").delete().eq("is_story_reply", true).lt("created_at", dayAgo)
 }
 
 async function loadChats() {
@@ -834,16 +857,18 @@ async function loadChats() {
     for (const convo of data) {
         const otherUser = convo.user1 === username ? convo.user2 : convo.user1
         
-        // Check if this specific chat has unread messages
-        const lastRead = localStorage.getItem(`last_read_${convo.id}`) || new Date(0).toISOString()
-        const { count } = await client
+        // Check for unread messages (seen: false, sender != current user, not cleared by me)
+        const { count, error: countErr } = await client
             .from("messages")
             .select("*", { count: 'exact', head: true })
             .eq("conversation_id", convo.id)
             .neq("sender", username)
-            .gt("created_at", lastRead)
+            .eq("seen", false)
+            .not('cleared_by', 'cs', '{"' + username + '"}')
 
-        const unreadIndicator = count > 0 ? `<div class="unread-indicator"></div>` : ""
+        const isUnread = !countErr && count > 0
+        const previewText = isUnread ? "unread message" : "Tap to open chat"
+        const previewClass = isUnread ? "unread-text" : ""
 
         const item = document.createElement("div")
         item.className = "chat-item"
@@ -853,9 +878,8 @@ async function loadChats() {
             <div class="chat-avatar">${otherUser[0].toUpperCase()}</div>
             <div class="chat-info">
                 <div class="chat-name">${otherUser}</div>
-                <div class="chat-preview">Tap to open chat</div>
+                <div class="chat-preview ${previewClass}">${previewText}</div>
             </div>
-            ${unreadIndicator}
         `
         list.appendChild(item)
     }
@@ -888,11 +912,42 @@ async function loadMessages() {
     if (error) return
 
     list.innerHTML = ""
+    
+    // 1. Mark unread messages as seen_at = now()
+    const unreadIds = data.filter(m => m.sender !== username && !m.seen_at).map(m => m.id)
+    if (unreadIds.length > 0) {
+        client.from("messages")
+            .update({ seen_at: new Date().toISOString() })
+            .in("id", unreadIds)
+            .then(() => console.log("Vanish Mode: Marked", unreadIds.length, "as seen"))
+    }
+
     data.forEach(msg => {
         const isMe = msg.sender === username
         const wrapper = document.createElement("div")
+        wrapper.id = `msg-${msg.id}`
         wrapper.className = `message-wrapper ${isMe ? "me" : "other"}`
-        wrapper.innerHTML = `<div class="message-bubble">${msg.message}</div>`
+        
+        // FADE OUT TIMER: Only for regular messages (NOT story replies)
+        if (msg.seen_at && !msg.is_story_reply) {
+            wrapper.classList.add("vanishing")
+            const seenTime = new Date(msg.seen_at).getTime()
+            const elapsed = Date.now() - seenTime
+            const remaining = Math.max(0, 30000 - elapsed)
+            
+            setTimeout(async () => {
+                await client.from("messages").delete().eq("id", msg.id)
+            }, remaining)
+        }
+
+        const replyLabel = msg.is_story_reply ? '<div class="story-reply-label">replied to your story</div>' : ''
+        const seenIndicator = (msg.seen_at && !msg.is_story_reply) ? '<span class="seen-label">Seen</span>' : ''
+
+        wrapper.innerHTML = `
+            ${replyLabel}
+            <div class="message-bubble">${msg.message}</div>
+            ${isMe ? seenIndicator : ''}
+        `
         list.appendChild(wrapper)
     })
     
@@ -912,7 +967,8 @@ async function sendChat() {
         .insert({
             conversation_id: convoId,
             sender: username,
-            message: message
+            message: message,
+            seen_at: null
         })
 
     if (error) {
@@ -930,9 +986,40 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (window.location.pathname.includes("chat.html")) {
         const cid = localStorage.getItem("chat_id")
         
-        // Vanishing Mode: Wipe on enter and wipe on exit
+        // Vanishing Mode: Cleanup on enter and exit
         clearChatMessages(cid) 
+        
+        // ONLY clear when explicitly leaving the page
         window.addEventListener("beforeunload", () => clearChatMessages(cid))
+        window.addEventListener("pagehide", () => clearChatMessages(cid))
+        // REMOVED visibilitychange as it's too aggressive and causes "vanishing while in chat"
+
+        // Real-time: Remove messages instantly when deleted from DB
+        client
+            .channel(`public:messages:convo:${cid}`)
+            .on('postgres_changes', { 
+                event: 'DELETE', 
+                schema: 'public', 
+                table: 'messages',
+                filter: `conversation_id=eq.${cid}` 
+            }, (payload) => {
+                console.log("Realtime: Message deleted", payload.old.id)
+                const el = document.getElementById(`msg-${payload.old.id}`)
+                if (el) el.classList.add("fade-out-instant")
+                setTimeout(() => { if (el) el.remove() }, 400)
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'messages',
+                filter: `conversation_id=eq.${cid}`
+            }, (payload) => {
+                // Refresh list if a message is marked seen_at
+                if (payload.new.seen_at && !payload.old.seen_at) {
+                    loadMessages()
+                }
+            })
+            .subscribe()
 
         loadMessages()
         setInterval(loadMessages, 3000)
