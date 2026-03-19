@@ -224,8 +224,8 @@ async function loadStories() {
 
         const ring = viewed[user] ? "seen" : "unseen"
 
-        const badge = user === "Misto Official" 
-            ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>` 
+        const badge = user === "Misto Official"
+            ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
             : ""
 
         const latestStory = users[user][users[user].length - 1]
@@ -259,8 +259,8 @@ function openStory(story) {
 
     const timeText = formatTime(story.created_at)
 
-    const badge = story.username === "Misto Official" 
-        ? `<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px; margin-left: 4px; margin-right: 2px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>` 
+    const badge = story.username === "Misto Official"
+        ? `<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px; margin-left: 4px; margin-right: 2px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
         : ""
 
     document.getElementById("viewerUser").innerHTML =
@@ -277,7 +277,7 @@ function openStory(story) {
     }
 
     document.getElementById("viewerText").innerHTML = content
-    
+
     // REPLY BOX
     const replyBox = document.getElementById("replyBox")
     const replyInput = document.getElementById("replyInput")
@@ -511,7 +511,7 @@ function resumeStory() {
     }
 
     const pressDuration = Date.now() - (pressStartTime || Date.now())
-    
+
     // Only block the next expected 'click' event if this was actually a long hold
     if (pressDuration > 200) {
         setTimeout(() => isLongPress = false, 100) // Keep true so any queued click event is ignored
@@ -585,7 +585,7 @@ function setupViewerControls() {
 
     // Swipe down to close viewer list
     const viewerSheet = document.getElementById("viewerList")
-    
+
     viewerSheet.addEventListener("touchstart", (e) => {
         startY = e.touches[0].clientY
     }, { passive: true })
@@ -704,7 +704,7 @@ function loadMenuUser() {
 async function sendReply() {
     const replyInput = document.getElementById("replyInput")
     if (!replyInput) return
-    
+
     const message = replyInput.value.trim()
     if (!message) return
 
@@ -741,7 +741,7 @@ async function sendReply() {
             .insert({ user1: username, user2: receiver })
             .select()
             .single()
-        
+
         if (insErr) {
             showToast("Failed to start conversation.")
             return
@@ -775,11 +775,11 @@ async function sendReply() {
 function showToast(text) {
     const container = document.getElementById("toastContainer")
     if (!container) return
-    
+
     const toast = document.createElement("div")
     toast.className = "toast"
     toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> ${text}`
-    
+
     container.appendChild(toast)
     setTimeout(() => {
         toast.style.opacity = "0"
@@ -793,7 +793,7 @@ async function checkUnreadGlobal() {
     if (!dot) return
 
     const lastCheck = localStorage.getItem("last_inbox_check") || new Date(0).toISOString()
-    
+
     const { data, error } = await client
         .from("messages")
         .select("id")
@@ -810,8 +810,18 @@ async function checkUnreadGlobal() {
 
 async function clearChatMessages(convoId) {
     if (!convoId) return
+
+    // Check if this is a random chat session
+    const isRandom = localStorage.getItem("misto_random") === "true"
+
+    if (isRandom) {
+        console.log("Vanish Mode (Random): Global Purge...")
+        await client.from("messages").delete().eq("conversation_id", convoId)
+        return
+    }
+
     console.log("Vanish Mode Cleanup: Processing exit purge...")
-    
+
     // Delete regular messages where seen_at is NOT NULL
     // But KEEP story replies (they stay for 24h)
     const { error } = await client
@@ -820,12 +830,46 @@ async function clearChatMessages(convoId) {
         .eq("conversation_id", convoId)
         .not("seen_at", "is", null)
         .eq("is_story_reply", false)
-    
+
     if (error) console.error("Exit Cleanup Error:", error)
 
     // Background Cleanup: Delete story replies older than 24h
     const dayAgo = new Date(Date.now() - 86400000).toISOString()
     await client.from("messages").delete().eq("is_story_reply", true).lt("created_at", dayAgo)
+}
+
+async function skipChat() {
+    const btn = document.getElementById("skipBtn")
+    if (!btn) return
+
+    if (!btn.classList.contains("confirm")) {
+        btn.innerText = "SURE?"
+        btn.classList.add("confirm")
+        setTimeout(() => {
+            if (btn) {
+                btn.innerText = "SKIP"
+                btn.classList.remove("confirm")
+            }
+        }, 3000)
+        return
+    }
+
+    const convoId = localStorage.getItem("chat_id")
+    if (convoId) {
+        // Global delete: Messages and Conversation
+        await client.from("messages").delete().eq("conversation_id", convoId)
+        await client.from("conversations").delete().eq("id", convoId)
+    }
+
+    localStorage.setItem("auto_match", "true")
+    window.location.href = "random.html"
+}
+
+async function exitChat() {
+    const convoId = localStorage.getItem("chat_id")
+    await clearChatMessages(convoId)
+    localStorage.removeItem("misto_random")
+    window.location.href = "inbox.html"
 }
 
 async function loadChats() {
@@ -841,6 +885,7 @@ async function loadChats() {
         .from("conversations")
         .select("*")
         .or(`user1.eq.${username},user2.eq.${username}`)
+        .eq("is_random", false)
         .order("created_at", { ascending: false })
 
     if (error) {
@@ -856,7 +901,7 @@ async function loadChats() {
     list.innerHTML = ""
     for (const convo of data) {
         const otherUser = convo.user1 === username ? convo.user2 : convo.user1
-        
+
         // Check for unread messages (seen: false, sender != current user, not cleared by me)
         const { count, error: countErr } = await client
             .from("messages")
@@ -894,11 +939,25 @@ function openChat(convoId, otherUser) {
 async function loadMessages() {
     const convoId = localStorage.getItem("chat_id")
     const otherUser = localStorage.getItem("chat_user")
+    const isRandom = localStorage.getItem("misto_random") === "true"
     const list = document.getElementById("messagesList")
     const headerTitle = document.getElementById("chatActiveUser")
+    const headerAvatar = document.getElementById("headerAvatar")
+    const headerStatus = document.getElementById("headerStatus")
 
     if (!convoId || !list) return
-    if (headerTitle) headerTitle.innerText = otherUser
+
+    if (headerTitle) {
+        headerTitle.innerText = isRandom ? "Stranger" : otherUser
+    }
+    if (headerAvatar) {
+        const displayUser = isRandom ? "Stranger" : otherUser
+        headerAvatar.innerText = displayUser[0].toUpperCase()
+        if (isRandom) headerAvatar.classList.add("random")
+    }
+    if (headerStatus && isRandom) {
+        headerStatus.innerText = "Connected"
+    }
 
     // Mark as read
     localStorage.setItem(`last_read_${convoId}`, new Date().toISOString())
@@ -912,7 +971,7 @@ async function loadMessages() {
     if (error) return
 
     list.innerHTML = ""
-    
+
     // 1. Mark unread messages as seen_at = now()
     const unreadIds = data.filter(m => m.sender !== username && !m.seen_at).map(m => m.id)
     if (unreadIds.length > 0) {
@@ -927,14 +986,14 @@ async function loadMessages() {
         const wrapper = document.createElement("div")
         wrapper.id = `msg-${msg.id}`
         wrapper.className = `message-wrapper ${isMe ? "me" : "other"}`
-        
+
         // FADE OUT TIMER: Only for regular messages (NOT story replies)
         if (msg.seen_at && !msg.is_story_reply) {
             wrapper.classList.add("vanishing")
             const seenTime = new Date(msg.seen_at).getTime()
             const elapsed = Date.now() - seenTime
             const remaining = Math.max(0, 30000 - elapsed)
-            
+
             setTimeout(async () => {
                 await client.from("messages").delete().eq("id", msg.id)
             }, remaining)
@@ -950,7 +1009,7 @@ async function loadMessages() {
         `
         list.appendChild(wrapper)
     })
-    
+
     list.scrollTop = list.scrollHeight
 }
 
@@ -985,10 +1044,10 @@ document.addEventListener("DOMContentLoaded", () => {
         loadChats()
     } else if (window.location.pathname.includes("chat.html")) {
         const cid = localStorage.getItem("chat_id")
-        
+
         // Vanishing Mode: Cleanup on enter and exit
-        clearChatMessages(cid) 
-        
+        clearChatMessages(cid)
+
         // ONLY clear when explicitly leaving the page
         window.addEventListener("beforeunload", () => clearChatMessages(cid))
         window.addEventListener("pagehide", () => clearChatMessages(cid))
@@ -997,11 +1056,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Real-time: Remove messages instantly when deleted from DB
         client
             .channel(`public:messages:convo:${cid}`)
-            .on('postgres_changes', { 
-                event: 'DELETE', 
-                schema: 'public', 
+            .on('postgres_changes', {
+                event: 'DELETE',
+                schema: 'public',
                 table: 'messages',
-                filter: `conversation_id=eq.${cid}` 
+                filter: `conversation_id=eq.${cid}`
             }, (payload) => {
                 console.log("Realtime: Message deleted", payload.old.id)
                 const el = document.getElementById(`msg-${payload.old.id}`)
@@ -1017,6 +1076,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Refresh list if a message is marked seen_at
                 if (payload.new.seen_at && !payload.old.seen_at) {
                     loadMessages()
+                }
+            })
+            .subscribe()
+
+        // Listen for conversation deletion (Partner Skip/Exit)
+        client
+            .channel(`public:conversations:id:${cid}`)
+            .on('postgres_changes', {
+                event: 'DELETE',
+                schema: 'public',
+                table: 'conversations',
+                filter: `id=eq.${cid}`
+            }, (payload) => {
+                if (localStorage.getItem("misto_random") === "true") {
+                    showToast("Partner left. Finding someone else...")
+                    setTimeout(() => {
+                        localStorage.setItem("auto_match", "true")
+                        window.location.href = "random.html"
+                    }, 1500)
                 }
             })
             .subscribe()
