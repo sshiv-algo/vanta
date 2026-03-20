@@ -68,14 +68,14 @@ async function initChat() {
 
 function handlePartnerSkip() {
     console.log("Partner has skipped.");
-    
+
     // Clear chat
     document.getElementById("messageList").innerHTML = `
         <div style="text-align:center; color:#6366f1; font-size:13px; margin-top:20px;">
             Stranger has skipped the chat.
         </div>
     `
-    
+
     // Update status and button
     const btn = document.getElementById("skipBtn")
     const status = document.getElementById("chatStatus")
@@ -88,7 +88,7 @@ function handlePartnerSkip() {
         btn.classList.add("start")
         btn.disabled = false
     }
-    
+
     if (input) {
         input.disabled = true
         input.placeholder = "Chat ended."
@@ -130,12 +130,12 @@ async function sendMessage() {
 }
 
 // UI HELPERS
-window.toggleMenu = function() {
+window.toggleMenu = function () {
     document.getElementById("sideMenu").classList.toggle("active")
     document.getElementById("overlay").classList.toggle("active")
 }
 
-window.logout = function() {
+window.logout = function () {
     localStorage.clear()
     window.location.href = "index.html"
 }
@@ -200,7 +200,7 @@ async function performConfirmSkip() {
     btn.innerText = "Start"
     btn.classList.remove("confirm")
     btn.classList.add("start")
-    
+
     // Disable input
     const input = document.getElementById("chatInput")
     if (input) {
@@ -237,6 +237,22 @@ window.addEventListener("beforeunload", (e) => {
     cleanupSession()
 })
 
+const bar = document.querySelector('.chat-bottom-bar');
+const msgList = document.getElementById('messageList');
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+
+        if (keyboardHeight > 0) {
+            bar.style.transform = `translateY(-${keyboardHeight}px)`;
+            // Scroll to bottom when keyboard opens
+            if (msgList) msgList.scrollTop = msgList.scrollHeight;
+        } else {
+            bar.style.transform = `translateY(0)`;
+        }
+    });
+}
 // Handle Enter Key
 document.getElementById("chatInput")?.addEventListener("keypress", (e) => {
     if (e.key === 'Enter') sendMessage()

@@ -46,49 +46,49 @@
 
         <div class="random-page">
 
-        <div class="random-card">
-            <div class="random-icon">🔀</div>
-            <h1>Misto Random Chat</h1>
-            <p>Connect instantly with strangers around the world.</p>
+            <div class="random-card">
+                <div class="random-icon">🔀</div>
+                <h1>Misto Random Chat</h1>
+                <p>Connect instantly with strangers around the world.</p>
 
-            <div class="notices">
-                <div class="notice-item">
-                    <span>🥷</span>
-                    <div><b>Stay anonymous</b>. Your identity is hidden.</div>
+                <div class="notices">
+                    <div class="notice-item">
+                        <span>🥷</span>
+                        <div><b>Stay anonymous</b>. Your identity is hidden.</div>
+                    </div>
+                    <div class="notice-item">
+                        <span>🤝</span>
+                        <div><b>Be respectful</b>. Community rules apply.</div>
+                    </div>
+                    <div class="notice-item">
+                        <span>🪄</span>
+                        <div><b>Vanish Mode</b>. Messages disappear after chat ends.</div>
+                    </div>
+                    <div class="notice-item">
+                        <span>⚠️</span>
+                        <div><b>Safety first</b>. Do not share personal info.</div>
+                    </div>
                 </div>
-                <div class="notice-item">
-                    <span>🤝</span>
-                    <div><b>Be respectful</b>. Community rules apply.</div>
-                </div>
-                <div class="notice-item">
-                    <span>🪄</span>
-                    <div><b>Vanish Mode</b>. Messages disappear after chat ends.</div>
-                </div>
-                <div class="notice-item">
-                    <span>⚠️</span>
-                    <div><b>Safety first</b>. Do not share personal info.</div>
-                </div>
+
+                <button class="start-btn" onclick="startMatching()">START CHAT</button>
+                <button class="logout-btn"
+                    style="background:transparent; color:#666; margin-top:20px; width:auto; padding:0;"
+                    onclick="window.location.href='app.html'">Back to Misto</button>
             </div>
 
-            <button class="start-btn" onclick="startMatching()">START CHAT</button>
-            <button class="logout-btn"
-                style="background:transparent; color:#666; margin-top:20px; width:auto; padding:0;"
-                onclick="window.location.href='app.html'">Back to Misto</button>
         </div>
 
-    </div>
+        <!-- MATCHING OVERLAY -->
+        <div id="matchingOverlay" class="matching-overlay">
+            <div class="loader"></div>
+            <h2 style="font-weight:700; margin-bottom:10px;">Connecting...</h2>
+            <p style="color:#666;">Finding someone for you</p>
+            <button onclick="cancelMatching()"
+                style="margin-top:30px; background:rgba(255,255,255,0.05); color:#999; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Cancel</button>
+        </div>
 
-    <!-- MATCHING OVERLAY -->
-    <div id="matchingOverlay" class="matching-overlay">
-        <div class="loader"></div>
-        <h2 style="font-weight:700; margin-bottom:10px;">Connecting...</h2>
-        <p style="color:#666;">Finding someone for you</p>
-        <button onclick="cancelMatching()"
-            style="margin-top:30px; background:rgba(255,255,255,0.05); color:#999; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Cancel</button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="random.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="random.js"></script>
 </body>
 
 </html>

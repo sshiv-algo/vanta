@@ -46,39 +46,42 @@
 
         <div class="chat-container">
 
-        <!-- HEADER -->
-        <div class="chat-header">
-            <div class="user-info">
-                <div class="avatar" id="partnerAvatar">?</div>
-                <div>
-                    <div style="font-size:14px; font-weight:700;" id="partnerName">Stranger</div>
-                    <div style="font-size:11px; color:#666;">Chatting anonymously</div>
+            <!-- HEADER -->
+            <div class="chat-header">
+                <div class="user-info">
+                    <div class="avatar" id="partnerAvatar">?</div>
+                    <div>
+                        <div style="font-size:14px; font-weight:700;" id="partnerName">Stranger</div>
+                        <div style="font-size:11px; color:#666;">Chatting anonymously</div>
+                    </div>
+                </div>
+                <div class="exit-btn" onclick="exitChat()">✕</div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div class="message-list" id="messageList">
+                <!-- Messages will be loaded here -->
+                <div style="text-align:center; color:#444; font-size:12px; margin-top:20px;">
+                    You are now connected with a stranger.<br>Say hello!
                 </div>
             </div>
-            <div class="exit-btn" onclick="exitChat()">✕</div>
-        </div>
 
-        <!-- MESSAGES -->
-        <div class="message-list" id="messageList">
-            <!-- Messages will be loaded here -->
-            <div style="text-align:center; color:#444; font-size:12px; margin-top:20px;">
-                You are now connected with a stranger.<br>Say hello!
-            </div>
-        </div>
+            <!-- BOTTOM BAR -->
+            <div class="chat-bottom-bar">
+                <!-- STATUS MESSAGE -->
+                <div id="chatStatus" class="chat-status"></div>
 
-            <!-- STATUS MESSAGE -->
-            <div id="chatStatus" class="chat-status"></div>
-
-            <!-- INPUT -->
-            <div class="input-area">
-                <button id="skipBtn" class="skip-btn" onclick="handleSkipClick()">Skip</button>
-                <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." autocomplete="off">
-                <button class="send-btn" onclick="sendMessage()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
+                <!-- INPUT -->
+                <div class="input-area">
+                    <button id="skipBtn" class="skip-btn" onclick="handleSkipClick()">Skip</button>
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." autocomplete="off">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
         </div>

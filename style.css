@@ -451,7 +451,8 @@ body {
     height: 100%;
 
     background: #000;
-    z-index: 9999; /* Higher than fixed headers (1000) */
+    z-index: 9999;
+    /* Higher than fixed headers (1000) */
 
     display: flex;
     justify-content: center;
@@ -1279,8 +1280,15 @@ body {
 }
 
 @keyframes toastIn {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* Header Refinement for Locked Positioning */
@@ -1300,12 +1308,14 @@ body {
 }
 
 /* Adjust containers for fixed headers - Only apply to top-level containers */
-.app, .chat-page {
+.app,
+.chat-page {
     padding-top: 70px !important;
 }
 
 /* Ensure no nested padding */
-.chat-list, .messages-container {
+.chat-list,
+.messages-container {
     padding-top: 0 !important;
 }
 
@@ -1319,16 +1329,28 @@ body {
     background: #f43f5e;
     border: 2px solid #0a0a0a;
     border-radius: 50%;
-    z-index: 2000 !important; /* Above everything */
+    z-index: 2000 !important;
+    /* Above everything */
     box-shadow: 0 0 15px rgba(244, 63, 94, 0.8);
     pointer-events: none;
 }
 
 /* Vanishing Animation */
 @keyframes fadeOutVanish {
-    0% { opacity: 1; transform: scale(1); }
-    80% { opacity: 0.5; transform: scale(0.98); }
-    100% { opacity: 0; transform: scale(0.95); }
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    80% {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
 }
 
 .message-wrapper.vanishing {

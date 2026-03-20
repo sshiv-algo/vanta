@@ -23,7 +23,12 @@
             <div class="menu-btn" onclick="toggleMenu()">☰</div>
             <div class="logo">Misto</div>
             <div class="chat-icon" onclick="window.location.href='inbox.html'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                    </path>
+                </svg>
                 <div id="unreadDot" class="unread-dot hidden"></div>
             </div>
         </div>
@@ -111,22 +116,18 @@
 
             <!-- REPLY BOX -->
             <div id="replyBox" class="story-reply-box hidden">
-                <input type="text" id="replyInput" class="reply-input" placeholder="Reply to story..." 
-                    onclick="event.stopPropagation()" 
-                    onmousedown="event.stopPropagation()" 
-                    onmouseup="event.stopPropagation()" 
-                    ontouchstart="event.stopPropagation()" 
-                    ontouchend="event.stopPropagation()" 
-                    onkeydown="if(event.key==='Enter') sendReply()" 
-                    onfocus="pauseStory()" 
-                    onblur="resumeStory()">
-                <button class="reply-btn" 
-                    onclick="event.stopPropagation(); sendReply()" 
-                    onmousedown="event.stopPropagation()" 
-                    onmouseup="event.stopPropagation()" 
-                    ontouchstart="event.stopPropagation()" 
-                    ontouchend="event.stopPropagation()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <input type="text" id="replyInput" class="reply-input" placeholder="Reply to story..."
+                    onclick="event.stopPropagation()" onmousedown="event.stopPropagation()"
+                    onmouseup="event.stopPropagation()" ontouchstart="event.stopPropagation()"
+                    ontouchend="event.stopPropagation()" onkeydown="if(event.key==='Enter') sendReply()"
+                    onfocus="pauseStory()" onblur="resumeStory()">
+                <button class="reply-btn" onclick="event.stopPropagation(); sendReply()"
+                    onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()"
+                    ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
                 </button>
             </div>
 
@@ -150,7 +151,15 @@
         </div>
 
         <!-- RANDOM CHAT FLOATING BUTTON -->
-        <div class="random-fab" onclick="window.location.href='random.html'">🔀</div>
+        <div class="random-fab" onclick="window.location.href='random.html'" title="Random Chat">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 3h5v5"></path>
+            <path d="M4 20L21 3"></path>
+            <path d="M21 16v5h-5"></path>
+            <path d="M15 15l6 6"></path>
+            <path d="M4 4l5 5"></path>
+        </svg>
+    </div>
     </div>
 
 
