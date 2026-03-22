@@ -180,8 +180,26 @@ window.addEventListener("beforeunload", () => {
     }
 })
 
+// Shared UI (required by random.html topbar/sidemenu)
+window.toggleMenu = function () {
+    document.getElementById("sideMenu").classList.toggle("active")
+    document.getElementById("overlay").classList.toggle("active")
+}
+window.logout = function () {
+    localStorage.clear()
+    window.location.href = "index.html"
+}
+function loadMenuUser() {
+    const u = localStorage.getItem("vanta_username")
+    if (u) {
+        document.getElementById("menuUsername").innerText = u
+        document.getElementById("menuAvatar").innerText = u[0].toUpperCase()
+    }
+}
+
 // Initialize: Clear any old state
 async function init() {
+    loadMenuUser()
     if (username) {
         console.log("Initial cleanup for user:", username);
         await client.from("waiting_users").delete().eq("username", username)
