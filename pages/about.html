@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Misto</title>
+
+    <style>
+        /* RESET */
+        /* ================== BACKGROUND ================== */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #0a0a1a, #050509 60%);
+            color: #f5f5f5;
+        }
+
+        /* ================== HERO ================== */
+        .about-hero {
+            padding: 160px 24px 120px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        /* SMALL TAG */
+        .section-tag {
+            color: #ec4899;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        /* HEADING */
+        .about-hero h1 {
+            font-size: clamp(42px, 6vw, 64px);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        /* GRADIENT TEXT */
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* DESCRIPTION */
+        .hero-desc {
+            color: #9ca3af;
+            font-size: 16px;
+            line-height: 1.7;
+            max-width: 600px;
+        }
+
+        /* ================== SECTION ================== */
+        .about-story {
+            background: radial-gradient(circle at top, #0a0a1f, #050509 70%);
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+
+            padding: 120px 24px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        /* LEFT TEXT */
+        .story-text h2 {
+            font-size: 34px;
+            margin-bottom: 16px;
+        }
+
+        .story-text p {
+            color: #9ca3af;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            max-width: 600px;
+        }
+
+        /* ================== CARD ================== */
+        .mission-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 34px;
+
+            backdrop-filter: blur(14px);
+
+            /* GLOW EFFECT */
+            box-shadow: 0 0 60px rgba(168, 85, 247, 0.25);
+        }
+
+        /* TITLES */
+        .mission-title {
+            color: #a855f7;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .vision-title {
+            color: #ec4899;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* TEXT */
+        .mission-card p {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        /* DIVIDER */
+        .mission-card hr {
+            margin: 26px 0;
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* ================== SECTION ================== */
+        .values {
+            padding: 120px 24px;
+            text-align: center;
+
+            background: radial-gradient(circle at top, #0b0a1a, #040408 70%);
+        }
+
+        /* TITLE */
+        .values h2 {
+            font-size: 34px;
+            margin-top: 10px;
+        }
+
+        /* GRID */
+        .value-grid {
+            margin-top: 50px;
+
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* CARD */
+        .value-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 30px;
+            border-radius: 20px;
+
+            text-align: left;
+
+            transition: all 0.3s ease;
+        }
+
+        /* HOVER GLOW */
+        .value-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+        }
+
+        /* ICON BOX */
+        .icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+
+            background: rgba(168, 85, 247, 0.15);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        /* TEXT */
+        .value-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .value-card p {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        /* ================== BUILT SECTION ================== */
+        .built {
+            padding: 120px 24px;
+            text-align: center;
+
+            background: radial-gradient(circle at top, #0d0a1c, #05040a 70%);
+        }
+
+        .built h2 {
+            font-size: 36px;
+        }
+
+        /* GRID */
+        .built-grid {
+            margin-top: 50px;
+
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* CARD */
+        .built-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 30px;
+            border-radius: 20px;
+
+            text-align: center;
+
+            transition: 0.3s ease;
+        }
+
+        /* HOVER GLOW */
+        .built-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+        }
+
+        /* ICON */
+        .icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+
+            background: rgba(168, 85, 247, 0.15);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 16px;
+            font-size: 18px;
+        }
+
+        /* TEXT */
+        .built-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .built-card p {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+
+        /* ================== FOOTER ================== */
+        .footer {
+            background: #040407;
+            padding: 70px 24px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* CONTAINER */
+        .footer-container {
+            max-width: 1100px;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: 1.2fr 2fr;
+            gap: 60px;
+        }
+
+        /* BRAND */
+        .footer-brand .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            color: #9ca3af;
+            max-width: 260px;
+        }
+
+        /* LINKS */
+        .footer-links {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .footer-links h4 {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            display: block;
+            text-decoration: none;
+            color: #aaa;
+            margin-bottom: 8px;
+            transition: 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        /* BOTTOM */
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <div id="navbar"></div>
+
+    <!-- ABOUT CONTENT -->
+    <section class="about-hero">
+
+        <p class="section-tag">ABOUT MISTO</p>
+
+        <h1>
+            A platform for
+            <span class="gradient-text">unfiltered</span><br>
+            <span class="gradient-text">expression</span>
+        </h1>
+
+        <p class="hero-desc">
+            Misto is a story-first social platform where anyone can share thoughts,
+            confessions, and moments — completely anonymously. No profiles, no history,
+            no judgment.
+        </p>
+
+    </section>
+    <section class="about-story">
+
+        <!-- LEFT CONTENT -->
+        <div class="story-text">
+            <p class="section-tag">OUR STORY</p>
+
+            <h2>Why anonymity matters</h2>
+
+            <p>
+                We built Misto because the internet lost something important: honesty.
+                When every post is tied to your name, your employer, and your follower count —
+                you stop saying what you actually mean.
+            </p>
+
+            <p>
+                We wanted to create a space where a 16-year-old in Jakarta and a 30-year-old
+                in Berlin could share the same vulnerability, and neither would know or care
+                who the other was.
+            </p>
+
+            <p>
+                Misto is that space. Anonymous by default, empathetic by design.
+            </p>
+        </div>
+
+        <!-- RIGHT CARD -->
+        <div class="mission-card">
+
+            <h3 class="mission-title">Our Mission</h3>
+            <p>
+                To give every person on the planet a safe, anonymous space to express
+                themselves — free from identity pressure.
+            </p>
+
+            <hr>
+
+            <h3 class="vision-title">Our Vision</h3>
+            <p>
+                A world where your ideas are valued for what they say — not who said them.
+            </p>
+
+        </div>
+
+    </section>
+    <section class="values">
+
+        <p class="section-tag">CORE VALUES</p>
+        <h2>What we stand for</h2>
+
+        <div class="value-grid">
+
+            <div class="value-card">
+                <div class="icon-box">👁</div>
+                <h3>Radical Anonymity</h3>
+                <p>
+                    No accounts, no profiles, no digital footprint.
+                    Your identity is yours alone.
+                </p>
+            </div>
+
+            <div class="value-card">
+                <div class="icon-box">💜</div>
+                <h3>Judgment-Free Zone</h3>
+                <p>
+                    Every story is equal. No follower counts,
+                    no clout, no hierarchy.
+                </p>
+            </div>
+
+            <div class="value-card">
+                <div class="icon-box">✨</div>
+                <h3>Ephemeral Expression</h3>
+                <p>
+                    Stories disappear after 24 hours, so you can
+                    speak freely without permanence.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+    <section class="built">
+
+        <h2>Built <span class="gradient-text">different</span></h2>
+
+        <div class="built-grid">
+
+            <div class="built-card">
+                <div class="icon-box">🛡</div>
+                <h3>AI Safety Net</h3>
+                <p>Smart moderation that protects without killing authenticity.</p>
+            </div>
+
+            <div class="built-card">
+                <div class="icon-box">🌐</div>
+                <h3>Borderless Stories</h3>
+                <p>Read stories from 120+ countries, translated in real-time.</p>
+            </div>
+
+            <div class="built-card">
+                <div class="icon-box">🔥</div>
+                <h3>Trending Stories</h3>
+                <p>Discover what's resonating with people across the world.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <!-- LEFT -->
+            <div class="footer-brand">
+                <div class="logo">🔥</div>
+                <h3>Misto</h3>
+                <p>Share stories, stay anonymous. The next generation of self-expression.</p>
+            </div>
+
+            <!-- LINKS -->
+            <div class="footer-links">
+
+                <div>
+                    <h4>PRODUCT</h4>
+                    <a href="#">Home</a>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                </div>
+
+                <div>
+                    <h4>SUPPORT</h4>
+                    <a href="#">Help</a>
+                    <a href="#">Discord</a>
+                    <a href="#">Contact</a>
+                </div>
+
+                <div>
+                    <h4>LEGAL</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Guidelines</a>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 Misto. All rights reserved.
+        </div>
+
+    </footer>
+    <!-- NAVBAR SCRIPT -->
+    <script>
+        fetch("../pages/nav.html")
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById("navbar").innerHTML = data;
+            });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 10px 20px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    /* TRUE GLASS EFFECT */
+    background: rgba(15, 15, 25, 0.5);
+    /* semi transparent */
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+    z-index: 1000;
+}
+
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+}
+
+.navbar-name {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #c7c9ff, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}
+
+.navbar-menu {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navbar-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.navbar-menu span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.navbar-menu span:nth-child(2) {
+    width: 14px;
+}
+
+/* ================== NAV LINKS ================== */
+
+.nav-links {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+}
+
+/* LINK STYLE */
+.nav-link {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+}
+
+/* HOVER */
+.nav-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ACTIVE */
+.nav-link.active {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+@keyframes fadeDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

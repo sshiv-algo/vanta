@@ -290,15 +290,26 @@
 
         /* ================== NAVBAR ================== */
         .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 10px 20px;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            position: relative;
-            z-index: 10;
-            animation: fadeDown 0.8s ease forwards;
-            opacity: 0;
+
+            /* TRUE GLASS EFFECT */
+            background: rgba(15, 15, 25, 0.5);
+            /* semi transparent */
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+            z-index: 1000;
         }
+
 
         .navbar-brand {
             display: flex;
@@ -362,6 +373,37 @@
             width: 14px;
         }
 
+        /* ================== NAV LINKS ================== */
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        /* LINK STYLE */
+        .nav-link {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+        }
+
+        /* HOVER */
+        .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ACTIVE */
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
         @keyframes fadeDown {
             from {
                 opacity: 0;
@@ -385,6 +427,7 @@
             padding: 0 28px 60px;
             position: relative;
             z-index: 10;
+            min-height: 120vh;
         }
 
         .hero-badge {
@@ -587,6 +630,395 @@
             margin-top: 4px;
         }
 
+        /* ================== FEATURES ================== */
+
+        .features {
+            padding: 100px 24px;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        .features-header {
+            margin-bottom: 60px;
+        }
+
+        .features-tag {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a78bfa;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .features h2 {
+            font-size: clamp(28px, 6vw, 44px);
+            font-weight: 800;
+        }
+
+        .features .gradient-text {
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* GRID */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        /* CARD */
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 26px;
+            text-align: left;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
+        }
+
+        /* ICON */
+        .feature-card .icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(168, 85, 247, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        /* TEXT */
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* ================== HOW IT WORKS ================== */
+        .how-it-works {
+            padding: 120px 24px;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+
+            /* NEW BACKGROUND */
+            background: linear-gradient(180deg,
+                    rgba(10, 10, 20, 0.8),
+                    rgba(5, 5, 15, 1));
+
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* HEADER */
+        .how-header {
+            margin-bottom: 60px;
+        }
+
+        .how-tag {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a855f7;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .how-it-works h2 {
+            font-size: clamp(28px, 6vw, 44px);
+            font-weight: 800;
+        }
+
+        /* GRADIENT TEXT */
+        .gradient-alt {
+            background: linear-gradient(135deg, #c084fc, #f472b6, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* STEPS */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 40px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        /* STEP ITEM */
+        .step {
+            text-align: center;
+        }
+
+        /* NUMBER */
+        .step-number {
+            font-size: 64px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        /* TEXT */
+        .step h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* ================== WHY MISTO ================== */
+
+        .why-misto {
+            padding: 120px 24px;
+            position: relative;
+            z-index: 5;
+
+            /* DIFFERENT BG (slightly warmer/purple blend) */
+            background: radial-gradient(circle at 20% 30%,
+                    rgba(168, 85, 247, 0.08),
+                    transparent 40%),
+                radial-gradient(circle at 80% 70%,
+                    rgba(236, 72, 153, 0.06),
+                    transparent 40%),
+                #05050d;
+
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* CONTAINER */
+        .why-container {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        /* LEFT TEXT */
+        .why-tag {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #ec4899;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .why-text h2 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .why-text p {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+
+        /* RIGHT GRID */
+        .why-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* CARD */
+        .why-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: 0.3s ease;
+        }
+
+        .why-card:hover {
+            transform: translateY(-6px);
+        }
+
+        /* ICON */
+        .why-card .icon {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* TEXT */
+        .why-card h3 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .why-card p {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* FULL WIDTH CARD */
+        .why-card.full {
+            grid-column: span 2;
+        }
+
+        /* GLOW EFFECTS */
+        .glow-purple {
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+        }
+
+        .glow-pink {
+            box-shadow: 0 0 40px rgba(236, 72, 153, 0.15);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .why-container {
+                grid-template-columns: 1fr;
+            }
+
+            .why-card.full {
+                grid-column: span 1;
+            }
+        }
+
+        /* ================== FINAL CTA ================== */
+
+        .final-cta {
+            padding: 120px 24px;
+            text-align: center;
+
+            background: radial-gradient(circle at center,
+                    rgba(168, 85, 247, 0.12),
+                    transparent 60%),
+                #05050d;
+        }
+
+        .cta-content h2 {
+            font-size: clamp(32px, 6vw, 48px);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-content p {
+            color: #aaa;
+            max-width: 500px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+
+        /* BUTTON */
+        .cta-btn {
+            display: inline-block;
+            padding: 16px 36px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.4);
+        }
+
+        /* ================== FOOTER ================== */
+
+        .footer {
+            background: #070710;
+            padding: 60px 24px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-container {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+        }
+
+        /* BRAND */
+        .footer-brand .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            font-size: 13px;
+            color: #777;
+        }
+
+        /* LINKS */
+        .footer-links {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .footer-links h4 {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            display: block;
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 8px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        /* BOTTOM */
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #555;
+        }
+
         /* ================== RESPONSIVE ================== */
         @media (min-width: 768px) {
             .hero h1 {
@@ -667,17 +1099,29 @@
     <!-- MAIN PAGE -->
     <div class="page">
 
-        <!-- NAVBAR -->
         <nav class="navbar">
+
+            <!-- LEFT: LOGO -->
             <div class="navbar-brand">
                 <div class="navbar-logo">M</div>
                 <div class="navbar-name">Misto</div>
             </div>
-            <div class="navbar-menu" onclick="window.location.href='index.html'">
+
+            <!-- CENTER: NAV LINKS -->
+            <div class="nav-links">
+                <a href="#" class="nav-link active">Home</a>
+                <a href="pages/about.html" class="nav-link">About</a>
+                <a href="#" class="nav-link">Blog</a>
+                <a href="#" class="nav-link">Support</a>
+            </div>
+
+            <!-- RIGHT: MENU ICON (optional keep/remove) -->
+            <div class="navbar-menu">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
+
         </nav>
 
         <!-- HERO -->
@@ -721,14 +1165,205 @@
                     <div class="stat-label">REACH</div>
                 </div>
             </div>
+            <!-- SCROLL HINT -->
+            <div class="scroll-hint">
+                <div class="chevron"></div>
+            </div>
+        </section>
+
+        </section>
+        <!-- features -->
+        <section class="features">
+            <div class="features-header">
+                <p class="features-tag">FEATURES</p>
+                <h2>
+                    Built for <span class="gradient-text">real expression</span>
+                </h2>
+            </div>
+
+            <div class="features-grid">
+
+                <div class="feature-card">
+                    <div class="icon">🙈</div>
+                    <h3>Anonymous Posting</h3>
+                    <p>Share your truth without revealing who you are. No usernames, no profiles.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">⏱</div>
+                    <h3>Temporary Stories</h3>
+                    <p>Stories vanish after 24 hours. Say what you mean, then let it go.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3>No Login Required</h3>
+                    <p>Jump in instantly. No sign-ups, no emails, no friction.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">💜</div>
+                    <h3>Real Reactions</h3>
+                    <p>Get genuine reactions from real people who connect with your story.</p>
+                </div>
+
+            </div>
+        </section>
+        <!--how-it-works-->
+        <section class="how-it-works">
+
+            <div class="how-header">
+                <p class="how-tag">HOW IT WORKS</p>
+                <h2>
+                    Three steps to <span class="gradient-alt">freedom</span>
+                </h2>
+            </div>
+
+            <div class="steps">
+
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <h3>Write your story</h3>
+                    <p>Type whatever's on your mind. A confession, a thought, a moment.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <h3>Post anonymously</h3>
+                    <p>Share it with the world — no one will ever know it's you.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <h3>Watch it resonate</h3>
+                    <p>See reactions roll in from people who truly get it.</p>
+                </div>
+
+            </div>
+        </section>
+        <section class="why-misto">
+
+            <div class="why-container">
+
+                <!-- LEFT CONTENT -->
+                <div class="why-text">
+                    <p class="why-tag">WHY MISTO</p>
+
+                    <h2>
+                        Because your thoughts<br>
+                        <span class="gradient-text">deserve to be heard</span>
+                    </h2>
+
+                    <p>
+                        Social media made us performers. Every post is curated, every caption is calculated, every story
+                        is a personal brand exercise.
+                    </p>
+
+                    <p>
+                        Misto flips the script. Here, your words matter — not your followers, your face, or your name.
+                        Just raw, unfiltered you.
+                    </p>
+
+                    <p>
+                        No judgment. No history. No pressure. Just stories from real humans who want to be heard.
+                    </p>
+                </div>
+
+                <!-- RIGHT CARDS -->
+                <div class="why-cards">
+
+                    <div class="why-card glow-purple">
+                        <div class="icon">👥</div>
+                        <h3>1.2M+</h3>
+                        <p>Stories shared</p>
+                    </div>
+
+                    <div class="why-card glow-pink">
+                        <div class="icon">💜</div>
+                        <h3>8.4M+</h3>
+                        <p>Reactions given</p>
+                    </div>
+
+                    <div class="why-card full">
+                        <div class="icon">🛡</div>
+                        <h3>100%</h3>
+                        <p>Anonymous & encrypted. Always.</p>
+                    </div>
+
+                </div>
+
+            </div>
 
         </section>
 
-        <!-- SCROLL HINT -->
-        <div class="scroll-hint">
-            <div class="chevron"></div>
-        </div>
+        <section class="final-cta">
 
+            <div class="cta-content">
+                <h2>
+                    Ready to share your
+                    <span class="gradient-alt">story?</span>
+                </h2>
+
+                <p>
+                    No sign-up. No identity. Just you and your thoughts.
+                    Start exploring or post your first anonymous story.
+                </p>
+
+                <a href="app.html" class="cta-btn">
+                    Start Exploring Stories →
+                </a>
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="footer">
+
+            <div class="footer-container">
+
+                <!-- LEFT -->
+                <div class="footer-brand">
+                    <div class="logo">🔥</div>
+                    <h3>Misto</h3>
+                    <p>
+                        Share stories, stay anonymous. The next generation of self-expression.
+                    </p>
+                </div>
+
+                <!-- LINKS -->
+                <div class="footer-links">
+
+                    <div>
+                        <h4>PRODUCT</h4>
+                        <a href="#">Home</a>
+                        <a href="#">About</a>
+                        <a href="#">Blog</a>
+                    </div>
+
+                    <div>
+                        <h4>SUPPORT</h4>
+                        <a href="#">Help</a>
+                        <a href="#">Discord</a>
+                        <a href="#">Contact</a>
+                    </div>
+
+                    <div>
+                        <h4>LEGAL</h4>
+                        <a href="#">Privacy</a>
+                        <a href="#">Terms</a>
+                        <a href="#">Guidelines</a>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                © 2026 Misto. All rights reserved.
+            </div>
+
+        </footer>
     </div>
 
     <!-- PARTICLE GENERATOR -->
