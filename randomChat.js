@@ -12,6 +12,29 @@ const partnerName = localStorage.getItem("misto_random_partner");
 
 let chatSubscription = null;
 let sessionSubscription = null;
+let typingTimeout = null;
+let partnerTypingTimeout = null;
+
+// ==========================================
+// TYPING INDICATOR
+// ==========================================
+function sendTypingBroadcast() {
+    if (!chatSubscription || !sessionId) return;
+    chatSubscription.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { user: username }
+    });
+}
+
+function showPartnerTyping() {
+    const status = document.getElementById("chatStatus");
+    if (status) status.innerText = "typing...";
+    clearTimeout(partnerTypingTimeout);
+    partnerTypingTimeout = setTimeout(() => {
+        if (status) status.innerText = "";
+    }, 2500);
+}
 
 // ==========================================
 // INIT CHAT
@@ -35,11 +58,13 @@ async function initChat() {
         .order("created_at", { ascending: true });
 
     if (!error && data) {
+        const list = document.getElementById("messageList");
+        if (list && data.length > 0) list.innerHTML = "";
         data.forEach(displayMessage);
         scrollToBottom();
     }
 
-    // Subscribe new messages
+    // Subscribe new messages + typing broadcast
     chatSubscription = client
         .channel(`chat:${sessionId}`)
         .on("postgres_changes", {
@@ -48,8 +73,15 @@ async function initChat() {
             table: "random_messages",
             filter: `session_id=eq.${sessionId}`
         }, (payload) => {
+            const status = document.getElementById("chatStatus");
+            if (status) status.innerText = "";
             displayMessage(payload.new);
             scrollToBottom();
+        })
+        .on("broadcast", { event: "typing" }, (payload) => {
+            if (payload.payload?.user && payload.payload.user !== username) {
+                showPartnerTyping();
+            }
         })
         .subscribe();
 
@@ -89,6 +121,9 @@ async function sendMessage() {
     if (!text || !sessionId) return;
 
     input.value = "";
+
+    const statusEl = document.getElementById("chatStatus");
+    if (statusEl) statusEl.innerText = "";
 
     const { error } = await client.from("random_messages").insert({
         session_id: sessionId,
@@ -251,19 +286,42 @@ function loadMenuUser() {
 }
 
 // ==========================================
-// KEYBOARD FIX (FINAL)
+// KEYBOARD + TYPING + INPUT
 // ==========================================
-const input = document.getElementById("chatInput");
+const inputEl = document.getElementById("chatInput");
 
-input?.addEventListener("focus", scrollToBottom);
-input?.addEventListener("input", scrollToBottom);
+function setupKeyboardResize() {
+    if (!window.visualViewport) return;
+    const updateView = () => {
+        const vv = window.visualViewport;
+        const keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+        document.documentElement.style.setProperty("--keyboard-height", keyboardHeight + "px");
+        scrollToBottom();
+    };
+    window.visualViewport.addEventListener("resize", updateView);
+    window.visualViewport.addEventListener("scroll", updateView);
+    updateView();
+}
+
+inputEl?.addEventListener("focus", () => {
+    scrollToBottom();
+    setupKeyboardResize();
+});
+
+inputEl?.addEventListener("input", () => {
+    scrollToBottom();
+    clearTimeout(typingTimeout);
+    if (inputEl.value.trim()) {
+        sendTypingBroadcast();
+        typingTimeout = setTimeout(() => { sendTypingBroadcast(); }, 500);
+    }
+});
 
 if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", scrollToBottom);
 }
 
-// ENTER KEY SEND
-input?.addEventListener("keypress", (e) => {
+inputEl?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
 
@@ -276,6 +334,9 @@ async function runInit() {
 }
 
 runInit();
+
+// Init keyboard offset for mobile
+document.documentElement.style.setProperty("--keyboard-height", "0px");
 
 // CLEANUP ON CLOSE
 window.addEventListener("beforeunload", () => {

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual">
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Misto Random Chat - Connected</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,11 +16,11 @@
 <body>
 
 
-    <div class="app random-layout random-chat-page">
-        <!-- TOP BAR -->
-        <div class="topbar">
+    <div class="app random-layout">
+        <!-- MAIN MISTO HEADER -->
+        <div class="topbar random-topbar">
             <div class="menu-btn" onclick="toggleMenu()">☰</div>
-            <div class="logo">Misto</div>
+            <div class="logo" onclick="window.location.href='app.html'" style="cursor:pointer;">Misto</div>
             <div class="chat-icon" onclick="window.location.href='inbox.html'">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -45,11 +45,120 @@
         <!-- OVERLAY -->
         <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
-        <!-- MAIN HEADER -->
-        <div class="random-chat-header">
-            <h1>Random Chat</h1>
-            <p>Chat anonymously with strangers</p>
+        <div class="chat-container">
+
+            <!-- HEADER -->
+            <div class="chat-header">
+                <div class="user-info">
+                    <div class="avatar" id="partnerAvatar">?</div>
+                    <div>
+                        <div style="font-size:14px; font-weight:700;" id="partnerName">Stranger</div>
+                        <div style="font-size:11px; color:#666;">Chatting anonymously</div>
+                    </div>
+                </div>
+                <div class="exit-btn" onclick="exitChat()">✕</div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div class="message-list" id="messageList">
+                <!-- Messages will be loaded here -->
+                <div style="text-align:center; color:#444; font-size:12px; margin-top:20px;">
+                    You are now connected with a stranger.<br>Say hello!
+                </div>
+            </div>
+
+            <!-- BOTTOM BAR -->
+            <div class="chat-bottom-bar">
+                <!-- STATUS MESSAGE -->
+                <div id="chatStatus" class="chat-status"></div>
+
+                <!-- INPUT -->
+                <div class="input-area">
+                    <button id="skipBtn" class="skip-btn" onclick="handleSkipClick()">Skip</button>
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..."
+                        autocomplete="off">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
         </div>
+    </div>
+
+    <!-- EXIT CONFIRM MODAL -->
+    <div id="confirmModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:5000; align-items:center; justify-content:center;">
+        <div
+            style="background:#111; padding:30px; border-radius:20px; text-align:center; width:80%; max-width:300px; border:1px solid rgba(255,255,255,0.1);">
+            <h3 style="margin-bottom:10px;">Skip this chat?</h3>
+            <p style="color:#666; font-size:14px; margin-bottom:24px;">This will delete all messages and end the
+                session.</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('confirmModal').style.display='none'"
+                    style="flex:1; padding:12px; border-radius:10px; border:none; background:#222; color:white; cursor:pointer;">Cancel</button>
+                <button onclick="confirmSkip()"
+                    style="flex:1; padding:12px; border-radius:10px; border:none; background:#6366f1; color:white; cursor:pointer;">Yes,
+                    Skip</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="randomChat.js"></script>
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <title>Misto Random Chat - Connected</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="random.css">
+</head>
+
+<body>
+
+
+    <div class="app random-layout">
+        <!-- MAIN MISTO HEADER -->
+        <div class="topbar random-topbar">
+            <div class="menu-btn" onclick="toggleMenu()">☰</div>
+            <div class="logo" onclick="window.location.href='app.html'" style="cursor:pointer;">Misto</div>
+            <div class="chat-icon" onclick="window.location.href='inbox.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                    </path>
+                </svg>
+                <div id="unreadDot" class="unread-dot hidden"></div>
+            </div>
+        </div>
+
+        <!-- SIDE MENU -->
+        <div id="sideMenu" class="side-menu">
+            <h3 class="menu-title">Menu</h3>
+            <div class="menu-user">
+                <div class="menu-avatar" id="menuAvatar">?</div>
+                <div class="menu-username" id="menuUsername">username</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- OVERLAY -->
+        <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
         <div class="chat-container">
 
