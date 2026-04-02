@@ -5,322 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Misto</title>
-
-    <style>
-        /* RESET */
-        /* ================== BACKGROUND ================== */
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top, #0a0a1a, #050509 60%);
-            color: #f5f5f5;
-        }
-
-        /* ================== HERO ================== */
-        .about-hero {
-            padding: 160px 24px 120px;
-            max-width: 1000px;
-            margin: auto;
-        }
-
-        /* SMALL TAG */
-        .section-tag {
-            color: #ec4899;
-            font-size: 12px;
-            letter-spacing: 2px;
-            margin-bottom: 16px;
-        }
-
-        /* HEADING */
-        .about-hero h1 {
-            font-size: clamp(42px, 6vw, 64px);
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 20px;
-        }
-
-        /* GRADIENT TEXT */
-        .gradient-text {
-            background: linear-gradient(135deg, #a855f7, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* DESCRIPTION */
-        .hero-desc {
-            color: #9ca3af;
-            font-size: 16px;
-            line-height: 1.7;
-            max-width: 600px;
-        }
-
-        /* ================== SECTION ================== */
-        .about-story {
-            background: radial-gradient(circle at top, #0a0a1f, #050509 70%);
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 80px;
-
-            padding: 120px 24px;
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        /* LEFT TEXT */
-        .story-text h2 {
-            font-size: 34px;
-            margin-bottom: 16px;
-        }
-
-        .story-text p {
-            color: #9ca3af;
-            line-height: 1.7;
-            margin-bottom: 16px;
-            max-width: 600px;
-        }
-
-        /* ================== CARD ================== */
-        .mission-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 22px;
-            padding: 34px;
-
-            backdrop-filter: blur(14px);
-
-            /* GLOW EFFECT */
-            box-shadow: 0 0 60px rgba(168, 85, 247, 0.25);
-        }
-
-        /* TITLES */
-        .mission-title {
-            color: #a855f7;
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        .vision-title {
-            color: #ec4899;
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        /* TEXT */
-        .mission-card p {
-            color: #9ca3af;
-            line-height: 1.6;
-        }
-
-        /* DIVIDER */
-        .mission-card hr {
-            margin: 26px 0;
-            border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        /* ================== SECTION ================== */
-        .values {
-            padding: 120px 24px;
-            text-align: center;
-
-            background: radial-gradient(circle at top, #0b0a1a, #040408 70%);
-        }
-
-        /* TITLE */
-        .values h2 {
-            font-size: 34px;
-            margin-top: 10px;
-        }
-
-        /* GRID */
-        .value-grid {
-            margin-top: 50px;
-
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        /* CARD */
-        .value-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 30px;
-            border-radius: 20px;
-
-            text-align: left;
-
-            transition: all 0.3s ease;
-        }
-
-        /* HOVER GLOW */
-        .value-card:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
-        }
-
-        /* ICON BOX */
-        .icon-box {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-
-            background: rgba(168, 85, 247, 0.15);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
-
-        /* TEXT */
-        .value-card h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .value-card p {
-            color: #9ca3af;
-            line-height: 1.6;
-        }
-
-        /* ================== BUILT SECTION ================== */
-        .built {
-            padding: 120px 24px;
-            text-align: center;
-
-            background: radial-gradient(circle at top, #0d0a1c, #05040a 70%);
-        }
-
-        .built h2 {
-            font-size: 36px;
-        }
-
-        /* GRID */
-        .built-grid {
-            margin-top: 50px;
-
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        /* CARD */
-        .built-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 30px;
-            border-radius: 20px;
-
-            text-align: center;
-
-            transition: 0.3s ease;
-        }
-
-        /* HOVER GLOW */
-        .built-card:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
-        }
-
-        /* ICON */
-        .icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-
-            background: rgba(168, 85, 247, 0.15);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            margin: 0 auto 16px;
-            font-size: 18px;
-        }
-
-        /* TEXT */
-        .built-card h3 {
-            margin-bottom: 10px;
-        }
-
-        .built-card p {
-            color: #9ca3af;
-            line-height: 1.6;
-        }
-
-
-        /* ================== FOOTER ================== */
-        .footer {
-            background: #040407;
-            padding: 70px 24px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* CONTAINER */
-        .footer-container {
-            max-width: 1100px;
-            margin: auto;
-
-            display: grid;
-            grid-template-columns: 1.2fr 2fr;
-            gap: 60px;
-        }
-
-        /* BRAND */
-        .footer-brand .logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-
-            background: linear-gradient(135deg, #a855f7, #ec4899);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            margin-bottom: 10px;
-        }
-
-        .footer-brand p {
-            color: #9ca3af;
-            max-width: 260px;
-        }
-
-        /* LINKS */
-        .footer-links {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .footer-links h4 {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 12px;
-        }
-
-        .footer-links a {
-            display: block;
-            text-decoration: none;
-            color: #aaa;
-            margin-bottom: 8px;
-            transition: 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #fff;
-        }
-
-        /* BOTTOM */
-        .footer-bottom {
-            text-align: center;
-            margin-top: 40px;
-            color: #666;
-            font-size: 13px;
-        }
-    </style>
+    <link rel="stylesheet" href="pages/pages.css">
 </head>
 
 <body>
@@ -458,58 +143,74 @@
 
     <!-- FOOTER -->
     <footer class="footer">
-
         <div class="footer-container">
-
-            <!-- LEFT -->
             <div class="footer-brand">
-                <div class="logo">🔥</div>
-                <h3>Misto</h3>
+                <div class="footer-logo-row">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+                        <defs>
+                            <linearGradient id="fg" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#7c3aed" />
+                                <stop offset="50%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#c084fc" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M20 2C20 2 8 14 8 24C8 30.627 13.373 36 20 36C26.627 36 32 30.627 32 24C32 20 30 16 28 13C28 13 26 18 24 18C24 18 26 10 20 2Z" fill="url(#fg)" />
+                        <path d="M20 36C16.5 36 14 33 14 29C14 25 17 22 20 18C23 22 26 25 26 29C26 33 23.5 36 20 36Z" fill="rgba(255,255,255,0.25)" />
+                    </svg>
+                    <h3>Misto</h3>
+                </div>
                 <p>Share stories, stay anonymous. The next generation of self-expression.</p>
             </div>
-
-            <!-- LINKS -->
             <div class="footer-links">
-
                 <div>
                     <h4>PRODUCT</h4>
-                    <a href="#">Home</a>
-                    <a href="#">About</a>
-                    <a href="#">Blog</a>
+                    <a href="/pages/index.html">Home</a>
+                    <a href="/pages/about.html">About</a>
+                    <a href="/pages/blog.html">Blog</a>
                 </div>
-
                 <div>
                     <h4>SUPPORT</h4>
-                    <a href="#">Help</a>
+                    <a href="/pages/support.html">Help</a>
                     <a href="#">Discord</a>
                     <a href="#">Contact</a>
                 </div>
-
                 <div>
                     <h4>LEGAL</h4>
                     <a href="#">Privacy</a>
                     <a href="#">Terms</a>
                     <a href="#">Guidelines</a>
                 </div>
-
             </div>
-
         </div>
-
-        <div class="footer-bottom">
-            © 2026 Misto. All rights reserved.
-        </div>
-
+        <div class="footer-bottom">© 2026 Misto. All rights reserved.</div>
     </footer>
-    <!-- NAVBAR SCRIPT -->
     <script>
-        fetch("../pages/nav.html")
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById("navbar").innerHTML = data;
+        fetch("nav.html")
+            .then(r => r.text())
+            .then(d => {
+                document.getElementById("navbar").innerHTML = d;
+                const current = document.querySelector('.nav-link[href*="about"]');
+                if (current) current.classList.add('active');
+                const mCurrent = document.querySelector('.mobile-dropdown a[href*="about"]');
+                if (mCurrent) mCurrent.classList.add('active');
             });
-    </script>
 
+        function toggleMenu() {
+            const m = document.getElementById("mobileMenu");
+            const b = document.getElementById("hamburgerBtn");
+            m.classList.toggle("active");
+            b.classList.toggle("active");
+        }
+
+        document.addEventListener("click", function (e) {
+            const m = document.getElementById("mobileMenu");
+            const b = document.getElementById("hamburgerBtn");
+            if (m && b && !m.contains(e.target) && !b.contains(e.target)) {
+                m.classList.remove("active");
+                b.classList.remove("active");
+            }
+        });
+    </script>
 </body>
 
 </html>

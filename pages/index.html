@@ -35,6 +35,17 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
+        /* ================== PARTICLE CANVAS ================== */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         /* ================== BACKGROUND ================== */
         .bg-layer {
             position: fixed;
@@ -42,8 +53,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
+            z-index: 1;
             overflow: hidden;
+            pointer-events: none;
         }
 
         .bg-gradient {
@@ -66,31 +78,52 @@
             background-size: 60px 60px;
         }
 
-        /* ================== PARTICLES ================== */
-        .particle {
+        /* ================== GLOW ORBS ================== */
+        .glow-orb {
             position: absolute;
             border-radius: 50%;
+            filter: blur(80px);
             pointer-events: none;
-            animation: particleFloat linear infinite;
+            animation: orbPulse 8s ease-in-out infinite;
         }
 
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(100vh) scale(0);
-                opacity: 0;
-            }
+        .glow-orb.orb1 {
+            width: 300px;
+            height: 300px;
+            background: rgba(99, 102, 241, 0.12);
+            top: -5%;
+            left: 30%;
+        }
 
-            10% {
-                opacity: 1;
-            }
+        .glow-orb.orb2 {
+            width: 200px;
+            height: 200px;
+            background: rgba(139, 92, 246, 0.1);
+            bottom: 10%;
+            right: -5%;
+            animation-delay: 3s;
+        }
 
-            90% {
-                opacity: 1;
-            }
+        .glow-orb.orb3 {
+            width: 250px;
+            height: 250px;
+            background: rgba(99, 102, 241, 0.06);
+            bottom: 30%;
+            left: -10%;
+            animation-delay: 5s;
+        }
 
+        @keyframes orbPulse {
+
+            0%,
             100% {
-                transform: translateY(-10vh) scale(1);
-                opacity: 0;
+                transform: scale(1);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
             }
         }
 
@@ -230,59 +263,10 @@
             }
         }
 
-        /* ================== GLOW ORBS ================== */
-        .glow-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            animation: orbPulse 8s ease-in-out infinite;
-        }
-
-        .glow-orb.orb1 {
-            width: 300px;
-            height: 300px;
-            background: rgba(99, 102, 241, 0.12);
-            top: -5%;
-            left: 30%;
-        }
-
-        .glow-orb.orb2 {
-            width: 200px;
-            height: 200px;
-            background: rgba(139, 92, 246, 0.1);
-            bottom: 10%;
-            right: -5%;
-            animation-delay: 3s;
-        }
-
-        .glow-orb.orb3 {
-            width: 250px;
-            height: 250px;
-            background: rgba(99, 102, 241, 0.06);
-            bottom: 30%;
-            left: -10%;
-            animation-delay: 5s;
-        }
-
-        @keyframes orbPulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 0.6;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-        }
-
         /* ================== MAIN CONTENT ================== */
         .page {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -293,41 +277,37 @@
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 10px 20px;
-
+            height: 60px;
+            padding: 0 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-
-            /* TRUE GLASS EFFECT */
-            background: rgba(15, 15, 25, 0.5);
-            /* semi transparent */
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-
+            background: rgba(6, 6, 14, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-
             z-index: 1000;
+            transition: background 0.3s ease;
         }
-
 
         .navbar-brand {
             display: flex;
             align-items: center;
             gap: 10px;
+            text-decoration: none;
         }
 
         .navbar-logo {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: 800;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .navbar-logo svg {
+            width: 100%;
+            height: 100%;
         }
 
         .navbar-name {
@@ -340,80 +320,115 @@
             letter-spacing: -0.5px;
         }
 
-        .navbar-menu {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .navbar-menu:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.05);
-        }
-
-        .navbar-menu span {
-            display: block;
-            width: 18px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .navbar-menu span:nth-child(2) {
-            width: 14px;
-        }
-
-        /* ================== NAV LINKS ================== */
-
+        /* Desktop nav links */
         .nav-links {
             display: flex;
-            gap: 18px;
+            gap: 6px;
             align-items: center;
         }
 
-        /* LINK STYLE */
         .nav-link {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.55);
             text-decoration: none;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 10px;
             transition: all 0.25s ease;
+            font-weight: 500;
         }
 
-        /* HOVER */
         .nav-link:hover {
             color: white;
             background: rgba(255, 255, 255, 0.06);
         }
 
-        /* ACTIVE */
         .nav-link.active {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
         }
 
-        @keyframes fadeDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
+        /* Hamburger — hidden on desktop */
+        .navbar-hamburger {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            z-index: 1001;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .navbar-hamburger:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-hamburger span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .navbar-hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .navbar-hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Mobile dropdown */
+        .mobile-dropdown {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            background: rgba(6, 6, 14, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease;
+            z-index: 999;
+            display: none;
+        }
+
+        .mobile-dropdown.open {
+            max-height: 300px;
+            padding: 12px 24px 20px;
+        }
+
+        .mobile-dropdown a {
+            display: block;
+            padding: 14px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .mobile-dropdown a:hover,
+        .mobile-dropdown a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.06);
         }
 
         /* ================== HERO ================== */
@@ -424,10 +439,10 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 0 28px 60px;
+            padding: 100px 24px 60px;
             position: relative;
             z-index: 10;
-            min-height: 120vh;
+            min-height: 100vh;
         }
 
         .hero-badge {
@@ -468,7 +483,7 @@
         }
 
         .hero h1 {
-            font-size: clamp(32px, 8vw, 52px);
+            font-size: clamp(32px, 8vw, 56px);
             font-weight: 800;
             line-height: 1.15;
             letter-spacing: -1.5px;
@@ -485,10 +500,10 @@
         }
 
         .hero p {
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.7;
-            color: #777;
-            max-width: 380px;
+            color: rgba(255, 255, 255, 0.45);
+            max-width: 420px;
             margin: 0 auto 36px;
             font-weight: 400;
             animation: fadeUp 0.8s ease 0.6s forwards;
@@ -564,10 +579,46 @@
             transform: scale(0.97);
         }
 
-        /* ================== BOTTOM INDICATOR ================== */
+        /* ================== STATS BAR ================== */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 420px;
+            width: 100%;
+            padding: 28px 0 0;
+            margin-top: 12px;
+            animation: fadeUp 0.8s ease 1s forwards;
+            opacity: 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .stat-item .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5a7fc, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .stat-item .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.35);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* ================== SCROLL HINT ================== */
         .scroll-hint {
             position: absolute;
-            bottom: 24px;
+            bottom: 28px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -581,8 +632,8 @@
         .scroll-hint .chevron {
             width: 24px;
             height: 24px;
-            border-right: 2px solid rgba(255, 255, 255, 0.2);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
             transform: rotate(45deg);
         }
 
@@ -598,40 +649,7 @@
             }
         }
 
-        /* ================== STATS BAR ================== */
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-            animation: fadeUp 0.8s ease 1s forwards;
-            opacity: 0;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-item .stat-number {
-            font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #a5a7fc, #c4b5fd);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-item .stat-label {
-            font-size: 11px;
-            color: #555;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
-        }
-
         /* ================== FEATURES ================== */
-
         .features {
             padding: 100px 24px;
             text-align: center;
@@ -660,9 +678,9 @@
             background: linear-gradient(135deg, #c084fc, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* GRID */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -671,12 +689,11 @@
             margin: auto;
         }
 
-        /* CARD */
         .feature-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 20px;
-            padding: 26px;
+            padding: 28px;
             text-align: left;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
@@ -688,20 +705,18 @@
             box-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
         }
 
-        /* ICON */
         .feature-card .icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(168, 85, 247, 0.15);
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(168, 85, 247, 0.12);
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 16px;
-            font-size: 18px;
+            font-size: 20px;
         }
 
-        /* TEXT */
         .feature-card h3 {
             font-size: 16px;
             font-weight: 600;
@@ -710,7 +725,7 @@
 
         .feature-card p {
             font-size: 13px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.4);
             line-height: 1.6;
         }
 
@@ -720,16 +735,10 @@
             text-align: center;
             position: relative;
             z-index: 5;
-
-            /* NEW BACKGROUND */
-            background: linear-gradient(180deg,
-                    rgba(10, 10, 20, 0.8),
-                    rgba(5, 5, 15, 1));
-
+            background: linear-gradient(180deg, rgba(10, 10, 20, 0.8), rgba(5, 5, 15, 1));
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* HEADER */
         .how-header {
             margin-bottom: 60px;
         }
@@ -747,14 +756,13 @@
             font-weight: 800;
         }
 
-        /* GRADIENT TEXT */
         .gradient-alt {
             background: linear-gradient(135deg, #c084fc, #f472b6, #fb923c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* STEPS */
         .steps {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -763,22 +771,20 @@
             margin: auto;
         }
 
-        /* STEP ITEM */
         .step {
             text-align: center;
         }
 
-        /* NUMBER */
         .step-number {
             font-size: 64px;
             font-weight: 800;
             background: linear-gradient(135deg, #a855f7, #ec4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
         }
 
-        /* TEXT */
         .step h3 {
             font-size: 18px;
             font-weight: 600;
@@ -787,30 +793,21 @@
 
         .step p {
             font-size: 14px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.4);
             line-height: 1.6;
         }
 
         /* ================== WHY MISTO ================== */
-
         .why-misto {
             padding: 120px 24px;
             position: relative;
             z-index: 5;
-
-            /* DIFFERENT BG (slightly warmer/purple blend) */
-            background: radial-gradient(circle at 20% 30%,
-                    rgba(168, 85, 247, 0.08),
-                    transparent 40%),
-                radial-gradient(circle at 80% 70%,
-                    rgba(236, 72, 153, 0.06),
-                    transparent 40%),
+            background: radial-gradient(circle at 20% 30%, rgba(168, 85, 247, 0.08), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.06), transparent 40%),
                 #05050d;
-
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* CONTAINER */
         .why-container {
             max-width: 1100px;
             margin: auto;
@@ -820,7 +817,6 @@
             align-items: center;
         }
 
-        /* LEFT TEXT */
         .why-tag {
             font-size: 12px;
             letter-spacing: 2px;
@@ -835,41 +831,45 @@
             margin-bottom: 20px;
         }
 
+        .why-text .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .why-text p {
             font-size: 14px;
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.45);
             line-height: 1.7;
             margin-bottom: 14px;
         }
 
-        /* RIGHT GRID */
         .why-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
-        /* CARD */
         .why-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 20px;
             padding: 24px;
             backdrop-filter: blur(10px);
-            transition: 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .why-card:hover {
             transform: translateY(-6px);
+            border-color: rgba(168, 85, 247, 0.3);
         }
 
-        /* ICON */
         .why-card .icon {
             font-size: 20px;
             margin-bottom: 10px;
         }
 
-        /* TEXT */
         .why-card h3 {
             font-size: 26px;
             font-weight: 800;
@@ -878,15 +878,13 @@
 
         .why-card p {
             font-size: 13px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.4);
         }
 
-        /* FULL WIDTH CARD */
         .why-card.full {
             grid-column: span 2;
         }
 
-        /* GLOW EFFECTS */
         .glow-purple {
             box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
         }
@@ -895,27 +893,11 @@
             box-shadow: 0 0 40px rgba(236, 72, 153, 0.15);
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .why-container {
-                grid-template-columns: 1fr;
-            }
-
-            .why-card.full {
-                grid-column: span 1;
-            }
-        }
-
         /* ================== FINAL CTA ================== */
-
         .final-cta {
             padding: 120px 24px;
             text-align: center;
-
-            background: radial-gradient(circle at center,
-                    rgba(168, 85, 247, 0.12),
-                    transparent 60%),
-                #05050d;
+            background: radial-gradient(circle at center, rgba(168, 85, 247, 0.12), transparent 60%), #05050d;
         }
 
         .cta-content h2 {
@@ -925,13 +907,12 @@
         }
 
         .cta-content p {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.45);
             max-width: 500px;
             margin: 0 auto 30px;
             line-height: 1.6;
         }
 
-        /* BUTTON */
         .cta-btn {
             display: inline-block;
             padding: 16px 36px;
@@ -940,7 +921,8 @@
             color: white;
             font-weight: 600;
             text-decoration: none;
-            transition: 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 24px rgba(139, 92, 246, 0.25);
         }
 
         .cta-btn:hover {
@@ -949,7 +931,6 @@
         }
 
         /* ================== FOOTER ================== */
-
         .footer {
             background: #070710;
             padding: 60px 24px 20px;
@@ -964,29 +945,38 @@
             gap: 40px;
         }
 
-        /* BRAND */
-        .footer-brand .logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            border-radius: 12px;
+        .footer-brand {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .footer-brand h3 {
+        .footer-brand .footer-logo-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-brand .footer-logo-row svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-brand .footer-logo-row h3 {
             font-size: 18px;
-            margin-bottom: 10px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #c7c9ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .footer-brand p {
             font-size: 13px;
-            color: #777;
+            color: rgba(255, 255, 255, 0.35);
+            max-width: 260px;
         }
 
-        /* LINKS */
         .footer-links {
             display: flex;
             justify-content: space-between;
@@ -994,51 +984,115 @@
 
         .footer-links h4 {
             font-size: 12px;
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.45);
             margin-bottom: 12px;
+            letter-spacing: 1px;
         }
 
         .footer-links a {
             display: block;
             font-size: 14px;
-            color: #777;
+            color: rgba(255, 255, 255, 0.35);
             margin-bottom: 8px;
             text-decoration: none;
-            transition: 0.2s;
+            transition: color 0.25s ease;
         }
 
         .footer-links a:hover {
             color: #fff;
         }
 
-        /* BOTTOM */
         .footer-bottom {
             text-align: center;
             margin-top: 40px;
             font-size: 12px;
-            color: #555;
+            color: rgba(255, 255, 255, 0.25);
         }
 
         /* ================== RESPONSIVE ================== */
-        @media (min-width: 768px) {
-            .hero h1 {
-                font-size: 56px;
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
             }
 
-            .hero p {
-                font-size: 17px;
-                max-width: 480px;
-            }
-
-            .btn {
-                padding: 16px 40px;
-                font-size: 15px;
-            }
-
-            .floating-bubble,
-            .notif-card {
+            .navbar-hamburger {
                 display: flex;
             }
+
+            .mobile-dropdown {
+                display: block;
+            }
+
+            .why-container {
+                grid-template-columns: 1fr;
+            }
+
+            .why-card.full {
+                grid-column: span 1;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .footer-links {
+                gap: 32px;
+            }
+
+            /* Show bubbles on mobile but adjust positions and scale to zero overlap */
+            .notif-card,
+            .floating-bubble {
+                transform: scale(0.6);
+                opacity: 0.6;
+                max-width: 90vw;
+            }
+
+            /* Keep everything INSIDE screen */
+            .floating-bubble.b1 {
+                top: 8%;
+                left: 4%;
+            }
+
+            .floating-bubble.b2 {
+                top: 14%;
+                right: 4%;
+            }
+
+            .floating-bubble.b3 {
+                top: 48%;
+                left: 4%;
+            }
+
+            .floating-bubble.b4 {
+                top: 54%;
+                right: 4%;
+            }
+
+            .floating-bubble.b5 {
+                display: none;
+            }
+
+            .notif-card.n1 {
+                top: 10%;
+                right: 4%;
+            }
+
+            .notif-card.n2 {
+                bottom: 6%;
+                left: 4%;
+            }
+        }
+
+        .hero {
+            padding: 90px 20px 50px;
+            min-height: 100dvh;
+        }
+
+        .stats-bar {
+            max-width: 340px;
+            gap: 16px;
+        }
         }
 
         @media (max-width: 400px) {
@@ -1053,7 +1107,22 @@
             }
 
             .stats-bar {
+                gap: 12px;
+            }
+
+            .stat-item .stat-number {
+                font-size: 18px;
+            }
+
+            .footer-links {
+                flex-direction: column;
                 gap: 24px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-dropdown {
+                display: none !important;
             }
         }
     </style>
@@ -1061,72 +1130,78 @@
 
 <body>
 
+    <!-- PARTICLE CANVAS -->
+    <canvas id="particleCanvas"></canvas>
+
     <!-- BACKGROUND LAYER -->
     <div class="bg-layer">
         <div class="bg-gradient"></div>
         <div class="bg-grid"></div>
-
-        <!-- GLOW ORBS -->
         <div class="glow-orb orb1"></div>
         <div class="glow-orb orb2"></div>
         <div class="glow-orb orb3"></div>
-
-        <!-- FLOATING BUBBLES -->
         <div class="floating-bubble b1">💬 anonymous</div>
         <div class="floating-bubble b2">🔒 private</div>
         <div class="floating-bubble b3">🌍 global</div>
         <div class="floating-bubble b4">✨ stories</div>
         <div class="floating-bubble b5">👁 views</div>
-
-        <!-- NOTIFICATION CARDS -->
         <div class="notif-card n1">
             <div class="notif-avatar">S</div>
-            <div class="notif-text">
-                <strong>ShadowWolf</strong><br>
-                posted a new story
-            </div>
+            <div class="notif-text"><strong>ShadowWolf</strong><br>posted a new story</div>
         </div>
-
         <div class="notif-card n2">
             <div class="notif-avatar">L</div>
-            <div class="notif-text">
-                <strong>LunarComet</strong><br>
-                viewed your story
-            </div>
+            <div class="notif-text"><strong>LunarComet</strong><br>viewed your story</div>
         </div>
     </div>
 
     <!-- MAIN PAGE -->
     <div class="page">
 
-        <nav class="navbar">
-
-            <!-- LEFT: LOGO -->
-            <div class="navbar-brand">
-                <div class="navbar-logo">M</div>
+        <nav class="navbar" id="mainNav">
+            <a href="#" class="navbar-brand">
+                <div class="navbar-logo">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#7c3aed" />
+                                <stop offset="50%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#c084fc" />
+                            </linearGradient>
+                        </defs>
+                        <path
+                            d="M20 2C20 2 8 14 8 24C8 30.627 13.373 36 20 36C26.627 36 32 30.627 32 24C32 20 30 16 28 13C28 13 26 18 24 18C24 18 26 10 20 2Z"
+                            fill="url(#flameGrad)" />
+                        <path d="M20 36C16.5 36 14 33 14 29C14 25 17 22 20 18C23 22 26 25 26 29C26 33 23.5 36 20 36Z"
+                            fill="rgba(255,255,255,0.25)" />
+                    </svg>
+                </div>
                 <div class="navbar-name">Misto</div>
-            </div>
+            </a>
 
-            <!-- CENTER: NAV LINKS -->
             <div class="nav-links">
                 <a href="#" class="nav-link active">Home</a>
                 <a href="pages/about.html" class="nav-link">About</a>
-                <a href="#" class="nav-link">Blog</a>
-                <a href="#" class="nav-link">Support</a>
+                <a href="pages/blog.html" class="nav-link">Blog</a>
+                <a href="pages/support.html" class="nav-link">Support</a>
             </div>
 
-            <!-- RIGHT: MENU ICON (optional keep/remove) -->
-            <div class="navbar-menu">
+            <div class="navbar-hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
-
         </nav>
+
+        <div class="mobile-dropdown" id="mobileDropdown">
+            <a href="#" class="active">Home</a>
+            <a href="pages/about.html">About</a>
+            <a href="pages/blog.html">Blog</a>
+            <a href="pages/support.html">Support</a>
+        </div>
 
         <!-- HERO -->
         <section class="hero">
-
             <div class="hero-badge">
                 <span class="dot"></span>
                 Anonymous · Instant · Global
@@ -1142,15 +1217,10 @@
             </p>
 
             <div class="hero-buttons">
-                <a href="app.html" class="btn btn-primary">
-                    👁 View Stories
-                </a>
-                <a href="app.html" class="btn btn-secondary">
-                    Start →
-                </a>
+                <a href="app.html" class="btn btn-primary">👁 View Stories</a>
+                <a href="app.html" class="btn btn-secondary">Start →</a>
             </div>
 
-            <!-- STATS -->
             <div class="stats-bar">
                 <div class="stat-item">
                     <div class="stat-number">24h</div>
@@ -1165,228 +1235,237 @@
                     <div class="stat-label">REACH</div>
                 </div>
             </div>
-            <!-- SCROLL HINT -->
+
             <div class="scroll-hint">
                 <div class="chevron"></div>
             </div>
         </section>
 
-        </section>
-        <!-- features -->
+        <!-- FEATURES -->
         <section class="features">
             <div class="features-header">
                 <p class="features-tag">FEATURES</p>
-                <h2>
-                    Built for <span class="gradient-text">real expression</span>
-                </h2>
+                <h2>Built for <span class="gradient-text">real expression</span></h2>
             </div>
-
             <div class="features-grid">
-
                 <div class="feature-card">
                     <div class="icon">🙈</div>
                     <h3>Anonymous Posting</h3>
                     <p>Share your truth without revealing who you are. No usernames, no profiles.</p>
                 </div>
-
                 <div class="feature-card">
                     <div class="icon">⏱</div>
                     <h3>Temporary Stories</h3>
                     <p>Stories vanish after 24 hours. Say what you mean, then let it go.</p>
                 </div>
-
                 <div class="feature-card">
                     <div class="icon">⚡</div>
                     <h3>No Login Required</h3>
                     <p>Jump in instantly. No sign-ups, no emails, no friction.</p>
                 </div>
-
                 <div class="feature-card">
                     <div class="icon">💜</div>
                     <h3>Real Reactions</h3>
                     <p>Get genuine reactions from real people who connect with your story.</p>
                 </div>
-
             </div>
         </section>
-        <!--how-it-works-->
-        <section class="how-it-works">
 
+        <!-- HOW IT WORKS -->
+        <section class="how-it-works">
             <div class="how-header">
                 <p class="how-tag">HOW IT WORKS</p>
-                <h2>
-                    Three steps to <span class="gradient-alt">freedom</span>
-                </h2>
+                <h2>Three steps to <span class="gradient-alt">freedom</span></h2>
             </div>
-
             <div class="steps">
-
                 <div class="step">
                     <div class="step-number">01</div>
                     <h3>Write your story</h3>
                     <p>Type whatever's on your mind. A confession, a thought, a moment.</p>
                 </div>
-
                 <div class="step">
                     <div class="step-number">02</div>
                     <h3>Post anonymously</h3>
                     <p>Share it with the world — no one will ever know it's you.</p>
                 </div>
-
                 <div class="step">
                     <div class="step-number">03</div>
                     <h3>Watch it resonate</h3>
                     <p>See reactions roll in from people who truly get it.</p>
                 </div>
-
             </div>
         </section>
+
+        <!-- WHY MISTO -->
         <section class="why-misto">
-
             <div class="why-container">
-
-                <!-- LEFT CONTENT -->
                 <div class="why-text">
                     <p class="why-tag">WHY MISTO</p>
-
-                    <h2>
-                        Because your thoughts<br>
-                        <span class="gradient-text">deserve to be heard</span>
-                    </h2>
-
-                    <p>
-                        Social media made us performers. Every post is curated, every caption is calculated, every story
-                        is a personal brand exercise.
-                    </p>
-
-                    <p>
-                        Misto flips the script. Here, your words matter — not your followers, your face, or your name.
-                        Just raw, unfiltered you.
-                    </p>
-
-                    <p>
-                        No judgment. No history. No pressure. Just stories from real humans who want to be heard.
-                    </p>
+                    <h2>Because your thoughts<br><span class="gradient-text">deserve to be heard</span></h2>
+                    <p>Social media made us performers. Every post is curated, every caption is calculated, every story
+                        is a personal brand exercise.</p>
+                    <p>Misto flips the script. Here, your words matter — not your followers, your face, or your name.
+                        Just raw, unfiltered you.</p>
+                    <p>No judgment. No history. No pressure. Just stories from real humans who want to be heard.</p>
                 </div>
-
-                <!-- RIGHT CARDS -->
                 <div class="why-cards">
-
                     <div class="why-card glow-purple">
                         <div class="icon">👥</div>
                         <h3>1.2M+</h3>
                         <p>Stories shared</p>
                     </div>
-
                     <div class="why-card glow-pink">
                         <div class="icon">💜</div>
                         <h3>8.4M+</h3>
                         <p>Reactions given</p>
                     </div>
-
                     <div class="why-card full">
                         <div class="icon">🛡</div>
                         <h3>100%</h3>
                         <p>Anonymous & encrypted. Always.</p>
                     </div>
-
                 </div>
-
             </div>
-
         </section>
 
+        <!-- FINAL CTA -->
         <section class="final-cta">
-
             <div class="cta-content">
-                <h2>
-                    Ready to share your
-                    <span class="gradient-alt">story?</span>
-                </h2>
-
-                <p>
-                    No sign-up. No identity. Just you and your thoughts.
-                    Start exploring or post your first anonymous story.
-                </p>
-
-                <a href="app.html" class="cta-btn">
-                    Start Exploring Stories →
-                </a>
+                <h2>Ready to share your <span class="gradient-alt">story?</span></h2>
+                <p>No sign-up. No identity. Just you and your thoughts. Start exploring or post your first anonymous
+                    story.</p>
+                <a href="app.html" class="cta-btn">Start Exploring Stories →</a>
             </div>
-
         </section>
-
 
         <!-- FOOTER -->
         <footer class="footer">
-
             <div class="footer-container">
-
-                <!-- LEFT -->
                 <div class="footer-brand">
-                    <div class="logo">🔥</div>
-                    <h3>Misto</h3>
-                    <p>
-                        Share stories, stay anonymous. The next generation of self-expression.
-                    </p>
+                    <div class="footer-logo-row">
+                        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="flameGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#7c3aed" />
+                                    <stop offset="50%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#c084fc" />
+                                </linearGradient>
+                            </defs>
+                            <path
+                                d="M20 2C20 2 8 14 8 24C8 30.627 13.373 36 20 36C26.627 36 32 30.627 32 24C32 20 30 16 28 13C28 13 26 18 24 18C24 18 26 10 20 2Z"
+                                fill="url(#flameGrad2)" />
+                            <path
+                                d="M20 36C16.5 36 14 33 14 29C14 25 17 22 20 18C23 22 26 25 26 29C26 33 23.5 36 20 36Z"
+                                fill="rgba(255,255,255,0.25)" />
+                        </svg>
+                        <h3>Misto</h3>
+                    </div>
+                    <p>Share stories, stay anonymous. The next generation of self-expression.</p>
                 </div>
-
-                <!-- LINKS -->
                 <div class="footer-links">
-
                     <div>
                         <h4>PRODUCT</h4>
                         <a href="#">Home</a>
-                        <a href="#">About</a>
-                        <a href="#">Blog</a>
+                        <a href="pages/about.html">About</a>
+                        <a href="pages/blog.html">Blog</a>
                     </div>
-
                     <div>
                         <h4>SUPPORT</h4>
-                        <a href="#">Help</a>
+                        <a href="pages/support.html">Help</a>
                         <a href="#">Discord</a>
                         <a href="#">Contact</a>
                     </div>
-
                     <div>
                         <h4>LEGAL</h4>
                         <a href="#">Privacy</a>
                         <a href="#">Terms</a>
                         <a href="#">Guidelines</a>
                     </div>
-
                 </div>
-
             </div>
-
-            <div class="footer-bottom">
-                © 2026 Misto. All rights reserved.
-            </div>
-
+            <div class="footer-bottom">© 2026 Misto. All rights reserved.</div>
         </footer>
     </div>
 
-    <!-- PARTICLE GENERATOR -->
+    <!-- PARTICLE CANVAS JS -->
     <script>
         (function () {
-            const layer = document.querySelector('.bg-layer');
-            const colors = ['rgba(99,102,241,0.4)', 'rgba(139,92,246,0.3)', 'rgba(167,139,250,0.3)'];
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let animId;
+            let w, h;
 
-            for (let i = 0; i < 25; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-
-                const size = Math.random() * 3 + 1;
-                p.style.width = size + 'px';
-                p.style.height = size + 'px';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.background = colors[Math.floor(Math.random() * colors.length)];
-                p.style.animationDuration = (Math.random() * 15 + 10) + 's';
-                p.style.animationDelay = (Math.random() * 10) + 's';
-
-                layer.appendChild(p);
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
             }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function createParticle() {
+                const hue = 260 + Math.random() * 40;
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 1.8 + 0.5,
+                    dx: (Math.random() - 0.5) * 0.3,
+                    dy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.4 + 0.1,
+                    hue: hue,
+                    pulse: Math.random() * Math.PI * 2
+                };
+            }
+
+            const count = Math.min(60, Math.floor(w * h / 18000));
+            for (let i = 0; i < count; i++) particles.push(createParticle());
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                for (const p of particles) {
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    p.pulse += 0.015;
+                    const a = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
+
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h;
+                    if (p.y > h) p.y = 0;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${a})`;
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = `hsla(${p.hue}, 80%, 60%, ${a * 0.5})`;
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+                animId = requestAnimationFrame(draw);
+            }
+            draw();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) cancelAnimationFrame(animId);
+                else draw();
+            });
         })();
+
+        function toggleMobileMenu() {
+            const dropdown = document.getElementById('mobileDropdown');
+            const btn = document.getElementById('hamburgerBtn');
+            dropdown.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('mobileDropdown');
+            const btn = document.getElementById('hamburgerBtn');
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.remove('open');
+                btn.classList.remove('active');
+            }
+        });
     </script>
 
 </body>

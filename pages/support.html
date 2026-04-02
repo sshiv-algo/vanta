@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Misto</title>
+    <meta name="description" content="Get help, report issues, and connect with the Misto support team.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="pages.css">
+    <style>
+        /* ================== SUPPORT HERO ================== */
+        .support-hero {
+            padding: 140px 24px 60px;
+            text-align: center;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .support-hero h1 {
+            font-size: clamp(36px, 7vw, 60px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .support-hero .subtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* ================== SUPPORT GRID ================== */
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* ================== SUPPORT CARD ================== */
+        .support-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            padding: 36px 28px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .support-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(168, 85, 247, 0.35);
+            box-shadow: 0 16px 48px rgba(168, 85, 247, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.1);
+        }
+
+        .support-card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .support-card-icon::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7, #c084fc);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .support-card-icon.discord {
+            background: rgba(88, 101, 242, 0.12);
+        }
+
+        .support-card-icon.email {
+            background: rgba(236, 72, 153, 0.12);
+        }
+
+        .support-card-icon.help {
+            background: rgba(139, 92, 246, 0.12);
+        }
+
+        .support-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .support-card p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .support-card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .support-card-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.18);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* ================== REPORT SECTION ================== */
+        .report-section {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px 100px;
+        }
+
+        .report-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 24px;
+            padding: 48px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(236, 72, 153, 0.3), rgba(99, 102, 241, 0.5));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .report-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06), transparent 50%);
+            pointer-events: none;
+            animation: reportGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes reportGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .report-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-icon {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .report-card h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .report-card p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 440px;
+            margin: 0 auto 28px;
+        }
+
+        .report-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 24px rgba(139, 92, 246, 0.25);
+        }
+
+        .report-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .report-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ================== RESPONSIVE ================== */
+        @media (max-width: 768px) {
+            .support-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                padding: 24px 16px 60px;
+            }
+
+            .support-hero {
+                padding: 120px 20px 40px;
+            }
+
+            .report-card {
+                padding: 36px 24px;
+            }
+
+            .report-section {
+                padding: 0 16px 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="navbar"></div>
+
+    <section class="support-hero">
+        <p class="section-tag">SUPPORT</p>
+        <h1>We're here to <span class="gradient-text">help</span></h1>
+        <p class="subtitle">Have a question, found a bug, or just need someone to talk to? Reach out through any of the channels below.</p>
+    </section>
+
+    <section class="support-grid">
+
+        <div class="support-card">
+            <div class="support-card-icon discord">💬</div>
+            <h3>Discord</h3>
+            <p>Join our community, chat with other users, and get real-time help from the team.</p>
+            <a href="#" class="support-card-btn">Join Server →</a>
+        </div>
+
+        <div class="support-card">
+            <div class="support-card-icon email">📧</div>
+            <h3>Email</h3>
+            <p>Prefer a more formal channel? Drop us an email and we'll get back to you within 24 hours.</p>
+            <a href="mailto:support@misto.app" class="support-card-btn">Send Email →</a>
+        </div>
+
+        <div class="support-card">
+            <div class="support-card-icon help">📖</div>
+            <h3>Help Center</h3>
+            <p>Browse through our FAQ and documentation to find quick answers to common questions.</p>
+            <a href="#" class="support-card-btn">Browse Docs →</a>
+        </div>
+
+    </section>
+
+    <section class="report-section">
+        <div class="report-card">
+            <div class="report-icon">🚨</div>
+            <h2>Report an <span class="gradient-text">Issue</span></h2>
+            <p>Found a bug, security vulnerability, or inappropriate content? Let us know immediately and we'll take care of it.</p>
+            <a href="#" class="report-btn">🛡 Report Issue</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="footer-logo-row">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+                        <defs>
+                            <linearGradient id="fg" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#7c3aed" />
+                                <stop offset="50%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#c084fc" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M20 2C20 2 8 14 8 24C8 30.627 13.373 36 20 36C26.627 36 32 30.627 32 24C32 20 30 16 28 13C28 13 26 18 24 18C24 18 26 10 20 2Z" fill="url(#fg)" />
+                        <path d="M20 36C16.5 36 14 33 14 29C14 25 17 22 20 18C23 22 26 25 26 29C26 33 23.5 36 20 36Z" fill="rgba(255,255,255,0.25)" />
+                    </svg>
+                    <h3>Misto</h3>
+                </div>
+                <p>Share stories, stay anonymous. The next generation of self-expression.</p>
+            </div>
+            <div class="footer-links">
+                <div>
+                    <h4>PRODUCT</h4>
+                    <a href="/pages/index.html">Home</a>
+                    <a href="/pages/about.html">About</a>
+                    <a href="/pages/blog.html">Blog</a>
+                </div>
+                <div>
+                    <h4>SUPPORT</h4>
+                    <a href="/pages/support.html">Help</a>
+                    <a href="#">Discord</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div>
+                    <h4>LEGAL</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Guidelines</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">© 2026 Misto. All rights reserved.</div>
+    </footer>
+
+    <script>
+        fetch("nav.html")
+            .then(r => r.text())
+            .then(d => {
+                document.getElementById("navbar").innerHTML = d;
+                const current = document.querySelector('.nav-link[href*="support"]');
+                if (current) current.classList.add('active');
+                const mCurrent = document.querySelector('.mobile-dropdown a[href*="support"]');
+                if (mCurrent) mCurrent.classList.add('active');
+            });
+
+        function toggleMenu() {
+            const m = document.getElementById("mobileMenu");
+            const b = document.getElementById("hamburgerBtn");
+            m.classList.toggle("active");
+            b.classList.toggle("active");
+        }
+
+        document.addEventListener("click", function (e) {
+            const m = document.getElementById("mobileMenu");
+            const b = document.getElementById("hamburgerBtn");
+            if (m && b && !m.contains(e.target) && !b.contains(e.target)) {
+                m.classList.remove("active");
+                b.classList.remove("active");
+            }
+        });
+    </script>
+</body>
+
+</html>

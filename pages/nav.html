@@ -1,24 +1,40 @@
-<nav class="navbar">
-    <link rel="stylesheet" href="../pages/pages.css">
-    <!-- LEFT: LOGO -->
-    <div class="navbar-brand">
-        <div class="navbar-logo">M</div>
+<nav class="navbar" id="mainNav">
+    <link rel="stylesheet" href="pages.css">
+
+    <a href="/pages/index.html" class="navbar-brand">
+        <div class="navbar-logo">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#7c3aed" />
+                        <stop offset="50%" stop-color="#a855f7" />
+                        <stop offset="100%" stop-color="#c084fc" />
+                    </linearGradient>
+                </defs>
+                <path d="M20 2C20 2 8 14 8 24C8 30.627 13.373 36 20 36C26.627 36 32 30.627 32 24C32 20 30 16 28 13C28 13 26 18 24 18C24 18 26 10 20 2Z" fill="url(#flameGrad)" />
+                <path d="M20 36C16.5 36 14 33 14 29C14 25 17 22 20 18C23 22 26 25 26 29C26 33 23.5 36 20 36Z" fill="rgba(255,255,255,0.25)" />
+            </svg>
+        </div>
         <div class="navbar-name">Misto</div>
-    </div>
+    </a>
 
-    <!-- CENTER: NAV LINKS -->
     <div class="nav-links">
-        <a href="#" class="nav-link active">Home</a>
-        <a href="pages/about.html" class="nav-link">About</a>
-        <a href="#" class="nav-link">Blog</a>
-        <a href="#" class="nav-link">Support</a>
+        <a href="/pages/index.html" class="nav-link">Home</a>
+        <a href="/pages/about.html" class="nav-link">About</a>
+        <a href="/pages/blog.html" class="nav-link">Blog</a>
+        <a href="/pages/support.html" class="nav-link">Support</a>
     </div>
 
-    <!-- RIGHT: MENU ICON (optional keep/remove) -->
-    <div class="navbar-menu">
+    <div class="navbar-hamburger" id="hamburgerBtn" onclick="toggleMenu()">
         <span></span>
         <span></span>
         <span></span>
     </div>
-
 </nav>
+
+<div class="mobile-dropdown" id="mobileMenu">
+    <a href="/pages/index.html">Home</a>
+    <a href="/pages/about.html">About</a>
+    <a href="/pages/blog.html">Blog</a>
+    <a href="/pages/support.html">Support</a>
+</div>
