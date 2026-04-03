@@ -133,7 +133,8 @@ async function sendMessage() {
 
     if (error) {
         console.error(error);
-        alert("Failed to send message");
+        showError("Your message couldn't be sent. Please check your connection.");
+        return;
     }
 }
 

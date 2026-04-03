@@ -6,6 +6,8 @@ let currentIndex = 0
 let storyTimer = null
 let isLongPress = false
 let touchTimer = null
+let selectedDuration = null
+
 
 // Swipe tracking
 let startY = 0
@@ -75,9 +77,16 @@ async function postStory() {
     const imageFile = document.getElementById("storyImage").files[0]
 
     if (!text && !imageFile) {
-        alert("Add text or image")
+        showAlert("Please add some text or an image to post a story.")
         return
     }
+
+
+    if (!selectedDuration) {
+        showAlert("Please select a story duration before posting.")
+        return
+    }
+
 
     let mediaUrl = null
 
@@ -90,15 +99,16 @@ async function postStory() {
 
         if (error) {
             console.error(error)
-            alert("Image upload failed")
+            showError("We couldn't upload your image. Please try again.")
             return
         }
+
 
         mediaUrl = `${supabaseUrl}/storage/v1/object/public/stories/${fileName}`
     }
 
     let expires = new Date()
-    expires.setHours(expires.getHours() + 24)
+    expires.setHours(expires.getHours() + selectedDuration)
 
     const { error } = await client.from("stories").insert({
         username,
@@ -107,19 +117,36 @@ async function postStory() {
         media_url: mediaUrl,
         created_at: new Date(),
         expires_at: expires
+        // REMOVED 'duration' key temporarily to avoid Supabase errors if the column is missing
     })
+
 
     if (error) {
         console.error(error)
-        alert("Error posting story")
+        showError("Something went wrong while posting your story.")
         return
     }
 
+
     document.getElementById("storyText").value = ""
     document.getElementById("storyImage").value = ""
+    
+    // Reset duration selection
+    selectedDuration = null
+    document.querySelectorAll(".duration-btn").forEach(b => b.classList.remove("active-dur"))
+    
+    // Hide upload box
+    openUpload()
 
     loadStories()
 }
+
+window.selectDuration = function (d) {
+    selectedDuration = d
+    document.querySelectorAll(".duration-btn").forEach(b => b.classList.remove("active-dur"))
+    document.getElementById("dur" + d).classList.add("active-dur")
+}
+
 
 
 // ================== LOAD STORIES ==================
@@ -208,45 +235,70 @@ async function loadStories() {
     const unseen = Object.keys(users).filter(u => !viewed[u])
     const seen = Object.keys(users).filter(u => viewed[u])
 
-    // Ensure Misto Official is always at the front of its respective category
-    const sortOfficialFirst = (arr) => arr.sort((a, b) => {
+    // Sorting: 1. Official first, 2. Exclusive (1h) stories, 3. Normal
+    const sortPriority = (arr) => arr.sort((a, b) => {
         if (a === "Misto Official") return -1
         if (b === "Misto Official") return 1
+        
+        const aStories = users[a]
+        const bStories = users[b]
+        
+        const checkExclusive = (stories) => stories.some(s => {
+            const diff = new Date(s.expires_at).getTime() - new Date(s.created_at).getTime()
+            return diff < 7200000 // Less than 2 hours
+        })
+        
+        const aHasExclusive = checkExclusive(aStories)
+        const bHasExclusive = checkExclusive(bStories)
+        
+        if (aHasExclusive && !bHasExclusive) return -1
+        if (!aHasExclusive && bHasExclusive) return 1
         return 0
     })
 
+
     const sorted = [
-        ...sortOfficialFirst(unseen),
-        ...sortOfficialFirst(seen)
+        ...sortPriority(unseen),
+        ...sortPriority(seen)
     ]
 
     sorted.forEach(user => {
 
         const ring = viewed[user] ? "seen" : "unseen"
+        const stories = users[user]
+        
+        const hasExclusive = stories.some(s => {
+            const diff = new Date(s.expires_at).getTime() - new Date(s.created_at).getTime()
+            return diff < 7200000 // Less than 2 hours
+        })
 
-        const badge = user === "Misto Official"
+        const officialBadge = user === "Misto Official"
+
             ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
             : ""
+            
+        const exclusiveBadge = hasExclusive ? `<span class="exclusive-badge">⚡ Exclusive</span>` : ""
 
-        const latestStory = users[user][users[user].length - 1]
+        const latestStory = stories[stories.length - 1]
         const timeStr = formatTime(latestStory.created_at)
 
         const div = document.createElement("div")
-        div.className = "status-item"
+        div.className = "status-item" + (hasExclusive ? " exclusive-story" : "")
 
         div.innerHTML = `
             <div class="status-circle ${ring}">${user[0]}</div>
             <div class="status-text">
-                <b>${user}${badge}</b>
+                <b>${user}${officialBadge}${exclusiveBadge}</b>
                 <p>View story • ${timeStr}</p>
             </div>
         `
 
-        div.onclick = () => openStorySequence(users[user], 0)
+        div.onclick = () => openStorySequence(stories, 0)
 
         container.appendChild(div)
     })
 }
+
 
 
 // ================== STORY VIEW ==================
@@ -259,12 +311,18 @@ function openStory(story) {
 
     const timeText = formatTime(story.created_at)
 
-    const badge = story.username === "Misto Official"
+    const officialBadge = story.username === "Misto Official"
         ? `<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px; margin-left: 4px; margin-right: 2px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
         : ""
+        
+    const durationMs = new Date(story.expires_at).getTime() - new Date(story.created_at).getTime()
+    const isExclusive = durationMs < 7200000 // Less than 2 hours
+    const exclusiveBadge = isExclusive ? `<span class="exclusive-badge">⚡ Exclusive</span>` : ""
 
     document.getElementById("viewerUser").innerHTML =
-        `${story.username}${badge} • ${timeText}`
+
+        `${story.username}${officialBadge}${exclusiveBadge} • ${timeText}`
+
 
     let content = ""
     if (story.media_url) {
@@ -333,8 +391,15 @@ function openStory(story) {
         btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
         btn.onclick = (e) => {
             e.stopPropagation()
-            deleteStory(story.id)
+            pauseStory()
+            showConfirm("Are you sure you want to delete this story?", () => {
+                deleteStory(story.id)
+            }, () => {
+                resumeStory()
+            })
         }
+
+
         btn.onmousedown = (e) => e.stopPropagation()
         btn.onmouseup = (e) => e.stopPropagation()
         btn.ontouchstart = (e) => e.stopPropagation()
@@ -362,16 +427,17 @@ async function deleteStory(id) {
     console.log("ERROR:", error)
 
     if (error) {
-        alert("Delete error")
+        showError("Failed to delete the story. Please try again.")
         return
     }
 
     if (!data || data.length === 0) {
-        alert("No row deleted — mismatch issue")
+        showError("We couldn't find the story to delete.")
         return
     }
 
-    alert("Deleted successfully")
+    showToast("Story deleted successfully")
+
 
     closeViewer()
     loadStories()
@@ -585,6 +651,7 @@ function setupViewerControls() {
 
     // Swipe down to close viewer list
     const viewerSheet = document.getElementById("viewerList")
+    const sheetContent = document.querySelector(".viewer-sheet-content")
 
     viewerSheet.addEventListener("touchstart", (e) => {
         startY = e.touches[0].clientY
@@ -592,23 +659,25 @@ function setupViewerControls() {
 
     viewerSheet.addEventListener("touchend", (e) => {
         endY = e.changedTouches[0].clientY
-        if (endY - startY > 50) { // Swipe down
+        const deltaY = endY - startY
+        if (deltaY > 80) { // More robust swipe down threshold
             closeViewerList()
         }
     })
 }
 
-function openViewerList() {
 
+function openViewerList() {
     isViewerOpen = true
     pauseStory()
 
     const sheet = document.getElementById("viewerList")
     const list = document.getElementById("viewerListContent")
+    if (!sheet || !list) return
 
-    list.innerHTML = ""
+    list.innerHTML = `<div class="loading-viewers">Loading viewers...</div>`
 
-    const filtered = currentViewers
+    const filtered = (currentViewers || [])
         .map(v => typeof v === "string"
             ? { username: v, time: new Date().toISOString() }
             : v
@@ -616,22 +685,26 @@ function openViewerList() {
         .filter(v => v.username !== username)
 
     if (filtered.length === 0) {
-        list.innerHTML = "<p>No viewers yet</p>"
+        list.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; color: #666;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:16px; opacity:0.5;">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <p style="font-size:15px;">No viewers yet</p>
+            </div>`
     } else {
-
+        list.innerHTML = ""
         filtered.forEach(v => {
-
             const div = document.createElement("div")
             div.className = "viewer-item"
-
             div.innerHTML = `
-                <div class="viewer-avatar">${v.username[0]}</div>
-                <div>
-                    <b>${v.username}</b><br>
-                    <small>${formatTime(v.time)}</small>
+                <div class="viewer-avatar">${v.username[0].toUpperCase()}</div>
+                <div class="viewer-info">
+                    <span class="viewer-name">${v.username}</span>
+                    <span class="viewer-time">${formatTime(v.time)}</span>
                 </div>
             `
-
             list.appendChild(div)
         })
     }
@@ -641,12 +714,14 @@ function openViewerList() {
 
 function closeViewerList() {
     isViewerOpen = false
-    document.getElementById("viewerList").classList.remove("active")
+    const sheet = document.getElementById("viewerList")
+    if (sheet) sheet.classList.remove("active")
     resumeStory()
 }
 
-function formatTime(time) {
 
+
+function formatTime(time) {
     if (!time) return "Just now"
     const diff = Date.now() - new Date(time).getTime()
 
@@ -658,7 +733,10 @@ function formatTime(time) {
     if (mins < 60) return `${mins}m ago`
     return `${hours}h ago`
 }
+
+
 // ================== CLOSE ==================
+
 
 function closeViewer() {
     clearTimeout(storyTimer)

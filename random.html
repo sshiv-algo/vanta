@@ -87,8 +87,23 @@
                 style="margin-top:30px; background:rgba(255,255,255,0.05); color:#999; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Cancel</button>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="popups.js"></script>
         <script src="random.js"></script>
+
+    <div id="vantaPopup" class="vanta-popup">
+        <div class="vanta-popup-overlay" onclick="closePopup()"></div>
+        <div class="vanta-popup-card">
+            <div id="popupIcon" class="vanta-popup-icon"></div>
+            <h3 id="popupTitle" class="vanta-popup-title"></h3>
+            <p id="popupMessage" class="vanta-popup-message"></p>
+            <div id="popupActions" class="vanta-popup-actions"></div>
+        </div>
+    </div>
+
+    <!-- VANTA TOAST SYSTEM -->
+    <div id="vantaToast" class="vanta-toast"></div>
 </body>
+
+
 
 </html>

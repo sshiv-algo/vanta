@@ -72,7 +72,12 @@
 
                 <input type="file" id="storyImage">
 
-                <button onclick="postStory()">Post Story</button>
+                <div class="duration-options">
+                    <button class="duration-btn" id="dur24" onclick="selectDuration(24)">24 Hours</button>
+                    <button class="duration-btn" id="dur1" onclick="selectDuration(1)">1 Hour (Exclusive)</button>
+                </div>
+
+                <button onclick="postStory()" class="post-btn">Post Story</button>
 
             </div>
 
@@ -81,57 +86,7 @@
             <div id="stories" class="status-list"></div>
 
         </div>
-        <div id="viewerList" class="viewer-sheet">
 
-            <div class="viewer-sheet-overlay" onclick="closeViewerList()"></div>
-
-            <div class="viewer-sheet-content">
-
-                <div class="viewer-sheet-header">
-                    <span>Viewers</span>
-                    <span onclick="closeViewerList()">✕</span>
-                </div>
-
-                <div id="viewerListContent"></div>
-
-            </div>
-        </div>
-
-        <!-- STORY VIEWER -->
-        <div id="viewer" class="story-viewer hidden">
-            <div class="tap-zone left" onclick="prevStory()"></div>
-            <div class="tap-zone right" onclick="nextStory()"></div>
-            <div class="viewer-content">
-
-                <div id="storyProgress"></div>
-
-                <!-- CLOSE BUTTON -->
-                <div class="close-btn" onclick="closeViewer()">✕</div>
-
-                <div id="viewerUser" class="story-header"></div>
-
-                <div id="viewerText" class="story-body"></div>
-
-            </div>
-
-            <!-- REPLY BOX -->
-            <div id="replyBox" class="story-reply-box hidden">
-                <input type="text" id="replyInput" class="reply-input" placeholder="Reply to story..."
-                    onclick="event.stopPropagation()" onmousedown="event.stopPropagation()"
-                    onmouseup="event.stopPropagation()" ontouchstart="event.stopPropagation()"
-                    ontouchend="event.stopPropagation()" onkeydown="if(event.key==='Enter') sendReply()"
-                    onfocus="pauseStory()" onblur="resumeStory()">
-                <button class="reply-btn" onclick="event.stopPropagation(); sendReply()"
-                    onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()"
-                    ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </div>
-
-        </div>
 
         <div id="toastContainer" class="toast-container"></div>
 
@@ -163,12 +118,65 @@
         </div>
     </div>
 
+    <!-- STORY VIEWER -->
+    <div id="viewer" class="story-viewer hidden">
+        <div class="tap-zone left" onclick="prevStory()"></div>
+        <div class="tap-zone right" onclick="nextStory()"></div>
+        <div class="viewer-content">
+            <div id="storyProgress"></div>
+            <div class="close-btn" onclick="closeViewer()">✕</div>
+            <div id="viewerUser" class="story-header"></div>
+            <div id="viewerText" class="story-body"></div>
+        </div>
 
-    <!-- SCRIPTS -->
+        <!-- REPLY BOX -->
+        <div id="replyBox" class="story-reply-box hidden">
+            <input type="text" id="replyInput" class="reply-input" placeholder="Reply to story..."
+                onclick="event.stopPropagation()" onmousedown="event.stopPropagation()"
+                onmouseup="event.stopPropagation()" ontouchstart="event.stopPropagation()"
+                ontouchend="event.stopPropagation()" onkeydown="if(event.key==='Enter') sendReply()"
+                onfocus="pauseStory()" onblur="resumeStory()">
+            <button class="reply-btn" onclick="event.stopPropagation(); sendReply()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEWERS LIST BOTTOM SHEET -->
+    <div id="viewerList" class="viewer-sheet">
+        <div class="viewer-sheet-overlay" onclick="closeViewerList()"></div>
+        <div class="viewer-sheet-content">
+            <div class="viewer-sheet-header">
+                <span>Viewers</span>
+                <span class="close-sheet" onclick="closeViewerList()">✕</span>
+            </div>
+            <div id="viewerListContent"></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="usernames.js"></script>
+    <script src="popups.js"></script>
     <script src="app.js"></script>
 
+
+    <!-- VANTA UNIFIED POPUP SYSTEM -->
+    <div id="vantaPopup" class="vanta-popup">
+        <div class="vanta-popup-overlay" onclick="closePopup()"></div>
+        <div class="vanta-popup-card">
+            <div id="popupIcon" class="vanta-popup-icon"></div>
+            <h3 id="popupTitle" class="vanta-popup-title"></h3>
+            <p id="popupMessage" class="vanta-popup-message"></p>
+            <div id="popupActions" class="vanta-popup-actions"></div>
+        </div>
+    </div>
+
+    <!-- VANTA TOAST SYSTEM -->
+    <div id="vantaToast" class="vanta-toast"></div>
 </body>
+
 
 </html>

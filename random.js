@@ -17,7 +17,7 @@ let myId = null;
 async function startMatching() {
     console.log("MATCHMAKING STARTED for:", username);
     if (!username) {
-        alert("Username not found. Please go back to the home page.")
+        showAlert("We couldn't find your username. Please go back to the home page.", "Missing Info")
         return
     }
 
