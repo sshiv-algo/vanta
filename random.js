@@ -4,7 +4,14 @@
 
 const supabaseUrl = "https://rgfwsxrjwnzfbxpyywqg.supabase.co"
 const supabaseKey = "sb_publishable_Uk36ksZrA4Gimw3ir5JFDQ_U1wcCwtr"
-const client = supabase.createClient(supabaseUrl, supabaseKey)
+let client = null
+
+// Safe initialization
+try {
+    client = supabase.createClient(supabaseUrl, supabaseKey)
+} catch (e) {
+    console.error("Supabase Init Error:", e)
+}
 
 const username = localStorage.getItem("vanta_username")
 const gender = localStorage.getItem("vanta_gender")
@@ -12,71 +19,91 @@ const gender = localStorage.getItem("vanta_gender")
 let matchSubscription = null;
 let waitingSubscription = null;
 let isMatching = false;
-let myId = null;
+let matchmakingTimeout = null;
 
 async function startMatching() {
     console.log("MATCHMAKING STARTED for:", username);
+    
     if (!username) {
-        showAlert("We couldn't find your username. Please go back to the home page.", "Missing Info")
+        if (window.showAlert) {
+            showAlert("We couldn't find your username. Please go back to the home page.", "Missing Info")
+        } else {
+            alert("Please go back home to set your username.")
+        }
+        return
+    }
+
+    if (!client) {
+        if (window.showError) {
+            showError("Connection failed. Please refresh the page.", "Error")
+        } else {
+            alert("Connection error. Please refresh.")
+        }
         return
     }
 
     isMatching = true;
-    document.getElementById("matchingOverlay").style.display = "flex"
+    const overlay = document.getElementById("matchingOverlay")
+    if (overlay) overlay.style.display = "flex"
 
-    // 1. Initial Cleanup (remove any old stale entries for me)
-    await client.from("waiting_users").delete().eq("username", username)
+    try {
+        // 1. Initial Cleanup
+        await client.from("waiting_users").delete().eq("username", username)
 
-    // 2. Listen for sessions being created for ME (User2 case)
-    listenForSessions();
+        // 2. Setup Listeners
+        listenForSessions();
+        listenForWaitingUsers();
 
-    // 3. Listen for other users JOINING the waiting list (User1 case)
-    listenForWaitingUsers();
-
-    // 4. Try to find someone ALREADY waiting
-    console.log("Checking for existing users...");
-    const { data: waitingUsers, error: fetchErr } = await client
-        .from("waiting_users")
-        .select("*")
-        .neq("username", username)
-        .order("created_at", { ascending: true })
-        .limit(1)
-
-    if (fetchErr) {
-        console.error("Fetch Error:", fetchErr);
-        return;
-    }
-
-    if (waitingUsers && waitingUsers.length > 0) {
-        const partner = waitingUsers[0];
-        console.log("Found existing user! Partner:", partner.username);
-        // I found them, so I am User1, they are User2
-        await createSession(partner);
-    } else {
-        console.log("No one waiting. Joining the pool...");
-        // Join the pool
-        const { error: joinErr } = await client
+        // 3. Search for existing
+        console.log("Checking for existing users...");
+        const { data: waitingUsers, error: fetchErr } = await client
             .from("waiting_users")
-            .insert({ username, gender })
+            .select("*")
+            .neq("username", username)
+            .order("created_at", { ascending: true })
+            .limit(1)
 
-        if (joinErr) {
-            console.error("Join Pool Error:", joinErr);
-            return;
+        if (fetchErr) throw fetchErr;
+
+        if (waitingUsers && waitingUsers.length > 0) {
+            const partner = waitingUsers[0];
+            console.log("Found existing user! Partner:", partner.username);
+            await createSession(partner);
+        } else {
+            console.log("Joining the pool...");
+            const { error: joinErr } = await client
+                .from("waiting_users")
+                .insert({ username, gender })
+
+            if (joinErr) throw joinErr;
+            console.log("Joined waiting list. Waiting...");
+            
+            // Safety Timeout
+            clearTimeout(matchmakingTimeout);
+            matchmakingTimeout = setTimeout(() => {
+                if (isMatching) {
+                    if (window.showError) {
+                        showError("No partners available at the moment. Try again later!", "Timeout")
+                    }
+                    cancelMatching();
+                }
+            }, 30000);
         }
-        console.log("Successfully joined waiting list. Waiting for a partner...");
+    } catch (err) {
+        console.error("Matchmaking Logic Error:", err);
+        if (window.showError) {
+            showError("Could not connect to the matchmaking server. Please try again.", "Connection Error")
+        }
+        cancelMatching();
     }
 }
 
 async function createSession(partner) {
-    if (!isMatching) {
-        console.log("Match already found or cancelled. Skipping createSession.");
-        return;
-    }
+    if (!isMatching) return;
 
-    // RACE CONDITION PREVENTION: Alphabetical win
-    // If two users join at the same time, we agree on one session
+    // Alphabetical deterministic win
     if (username > partner.username) {
-        console.log("Alphabetical win: Partner initiated. Waiting for session instead.");
+        console.log("Alphabetical win: Partner initiated.");
         return;
     }
 
@@ -84,33 +111,35 @@ async function createSession(partner) {
         ? self.crypto.randomUUID()
         : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
 
-    console.log("Creating session:", sessionId, "with partner:", partner.username);
+    console.log("Creating session:", sessionId);
 
-    // 1. Create session record
-    const { error: sessionErr } = await client
-        .from("random_sessions")
-        .insert({
-            id: sessionId,
-            user1: username,
-            user2: partner.username,
-            active: true
-        })
+    try {
+        const { error: sessionErr } = await client
+            .from("random_sessions")
+            .insert({
+                id: sessionId,
+                user1: username,
+                user2: partner.username,
+                active: true
+            })
 
-    if (sessionErr) {
-        console.error("Session Insert Error:", sessionErr);
-        return;
+        if (sessionErr) throw sessionErr;
+
+        // Cleanup waiting list for BOTH (User1 does this for both)
+        console.log("Session inserted. Cleaning up waiting list...");
+        await client.from("waiting_users").delete().in("username", [username, partner.username])
+        
+        // IMPORTANT: We do NOT call completeMatch here anymore.
+        // Both the initiator and the partner will wait for the Realtime 'INSERT' 
+        // event to navigate simultaneously.
+    } catch (err) {
+        console.error("Session Creation Error:", err);
+        cancelMatching();
     }
-
-    // 2. Cleanup waiting list
-    console.log("Session created. Cleaning up waiting list...");
-    await client.from("waiting_users").delete().in("username", [username, partner.username])
-
-    // 3. Redirect
-    completeMatch(sessionId, partner.username);
 }
 
+
 function listenForWaitingUsers() {
-    console.log("Listening for new waiting users...");
     waitingSubscription = client
         .channel('public:waiting_users')
         .on('postgres_changes', {
@@ -118,91 +147,109 @@ function listenForWaitingUsers() {
             schema: 'public',
             table: 'waiting_users'
         }, (payload) => {
-            console.log("REALTIME: A new user joined:", payload.new.username);
             if (payload.new.username !== username) {
                 createSession(payload.new);
             }
         })
-        .subscribe((status) => {
-            console.log("Waiting list subscription status:", status);
-        })
+        .subscribe()
 }
 
 function listenForSessions() {
-    console.log("Listening for matches created for me...");
+    console.log("Listening for matches (Synchronized)...");
+    
+    // We use a shared channel for all session events related to ME
     matchSubscription = client
-        .channel('public:random_sessions')
+        .channel('public:random_sessions_sync')
+        // Case A: I am User 1 (Initiator)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'random_sessions',
+            filter: `user1=eq.${username}`
+        }, (payload) => {
+            console.log("MATCH FOUND (Initiator Role): Synchronizing transition...");
+            completeMatch(payload.new.id, payload.new.user2);
+        })
+        // Case B: I am User 2 (Partner)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'random_sessions',
             filter: `user2=eq.${username}`
         }, (payload) => {
-            console.log("REALTIME: Match found! Session ID:", payload.new.id);
+            console.log("MATCH FOUND (Partner Role): Synchronizing transition...");
             completeMatch(payload.new.id, payload.new.user1);
         })
         .subscribe((status) => {
-            console.log("Session subscription status:", status);
+            console.log("Match subscription status:", status);
         })
-}
-
-function completeMatch(sid, pname) {
-    if (!isMatching) return;
-    isMatching = false;
-
-    console.log("Match Complete. Redirecting to chat...");
-    localStorage.setItem("misto_random_session", sid)
-    localStorage.setItem("misto_random_partner", pname)
-
-    // Stop all subs
-    stopSubscriptions();
-
-    window.location.href = "randomChat.html";
 }
 
 function stopSubscriptions() {
     if (matchSubscription) client.removeChannel(matchSubscription)
     if (waitingSubscription) client.removeChannel(waitingSubscription)
+    clearTimeout(matchmakingTimeout);
 }
 
-async function cancelMatching() {
-    console.log("Matching cancelled by user.");
+function completeMatch(sid, pname) {
+    if (!isMatching) return;
     isMatching = false;
-    document.getElementById("matchingOverlay").style.display = "none"
+    localStorage.setItem("misto_random_session", sid)
+    localStorage.setItem("misto_random_partner", pname)
     stopSubscriptions();
-    await client.from("waiting_users").delete().eq("username", username)
+    window.location.href = "randomChat.html";
+}
+
+function cancelMatching() {
+    console.log("Matching cancelled.");
+    isMatching = false;
+    const overlay = document.getElementById("matchingOverlay")
+    if (overlay) overlay.style.display = "none"
+    stopSubscriptions();
+    if (username) {
+        client.from("waiting_users").delete().eq("username", username).then(() => {});
+    }
 }
 
 // Ensure cleanup on page leave
 window.addEventListener("beforeunload", () => {
-    if (isMatching) {
+    if (isMatching && username) {
         client.from("waiting_users").delete().eq("username", username)
     }
 })
 
-// Shared UI (required by random.html topbar/sidemenu)
+// Shared UI Logic
 window.toggleMenu = function () {
-    document.getElementById("sideMenu").classList.toggle("active")
-    document.getElementById("overlay").classList.toggle("active")
+    document.getElementById("sideMenu")?.classList.toggle("active")
+    document.getElementById("overlay")?.classList.toggle("active")
 }
+
 window.logout = function () {
     localStorage.clear()
     window.location.href = "index.html"
 }
+
 function loadMenuUser() {
     const u = localStorage.getItem("vanta_username")
     if (u) {
-        document.getElementById("menuUsername").innerText = u
-        document.getElementById("menuAvatar").innerText = u[0].toUpperCase()
+        const uEl = document.getElementById("menuUsername")
+        const aEl = document.getElementById("menuAvatar")
+        if (uEl) uEl.innerText = u
+        if (aEl) aEl.innerText = u[0].toUpperCase()
     }
 }
 
-// Initialize: Clear any old state
+// Init
 async function init() {
     loadMenuUser()
-    if (username) {
-        console.log("Initial cleanup for user:", username);
+    if (username && client) {
         await client.from("waiting_users").delete().eq("username", username)
     }
 }
-init();
+
+// Call init on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

@@ -4,7 +4,13 @@
 
 const supabaseUrl = "https://rgfwsxrjwnzfbxpyywqg.supabase.co";
 const supabaseKey = "sb_publishable_Uk36ksZrA4Gimw3ir5JFDQ_U1wcCwtr";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+let client = null;
+
+try {
+    client = supabase.createClient(supabaseUrl, supabaseKey);
+} catch (e) {
+    console.error("Supabase Init Error:", e);
+}
 
 const username = localStorage.getItem("vanta_username");
 const sessionId = localStorage.getItem("misto_random_session");
@@ -47,59 +53,76 @@ async function initChat() {
         return;
     }
 
-    document.getElementById("partnerName").innerText = partnerName;
-    document.getElementById("partnerAvatar").innerText = partnerName[0].toUpperCase();
-
-    // Load old messages
-    const { data, error } = await client
-        .from("random_messages")
-        .select("*")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: true });
-
-    if (!error && data) {
-        const list = document.getElementById("messageList");
-        if (list && data.length > 0) list.innerHTML = "";
-        data.forEach(displayMessage);
-        scrollToBottom();
+    if (!client) {
+        if (window.showError) showError("Connection failed. Returning to lobby.");
+        setTimeout(() => { window.location.href = "random.html"; }, 2000);
+        return;
     }
 
-    // Subscribe new messages + typing broadcast
-    chatSubscription = client
-        .channel(`chat:${sessionId}`)
-        .on("postgres_changes", {
-            event: "INSERT",
-            schema: "public",
-            table: "random_messages",
-            filter: `session_id=eq.${sessionId}`
-        }, (payload) => {
-            const status = document.getElementById("chatStatus");
-            if (status) status.innerText = "";
-            displayMessage(payload.new);
-            scrollToBottom();
-        })
-        .on("broadcast", { event: "typing" }, (payload) => {
-            if (payload.payload?.user && payload.payload.user !== username) {
-                showPartnerTyping();
-            }
-        })
-        .subscribe();
+    const pNameEl = document.getElementById("partnerName");
+    const pAvatarEl = document.getElementById("partnerAvatar");
+    if (pNameEl) pNameEl.innerText = partnerName;
+    if (pAvatarEl) pAvatarEl.innerText = partnerName[0].toUpperCase();
 
-    // Subscribe session delete
-    sessionSubscription = client
-        .channel(`session:${sessionId}`)
-        .on("postgres_changes", {
-            event: "DELETE",
-            schema: "public",
-            table: "random_sessions",
-            filter: `id=eq.${sessionId}`
-        }, () => handlePartnerSkip())
-        .subscribe();
+    try {
+        // Load old messages
+        const { data, error } = await client
+            .from("random_messages")
+            .select("*")
+            .eq("session_id", sessionId)
+            .order("created_at", { ascending: true });
+
+        if (!error && data) {
+            const list = document.getElementById("messageList");
+            if (list) {
+                list.innerHTML = "";
+                data.forEach(displayMessage);
+                scrollToBottom();
+            }
+        }
+
+        // Subscribe new messages + typing broadcast
+        chatSubscription = client
+            .channel(`chat:${sessionId}`)
+            .on("postgres_changes", {
+                event: "INSERT",
+                schema: "public",
+                table: "random_messages",
+                filter: `session_id=eq.${sessionId}`
+            }, (payload) => {
+                const status = document.getElementById("chatStatus");
+                if (status) status.innerText = "";
+                displayMessage(payload.new);
+                scrollToBottom();
+            })
+            .on("broadcast", { event: "typing" }, (payload) => {
+                if (payload.payload?.user && payload.payload.user !== username) {
+                    showPartnerTyping();
+                }
+            })
+            .subscribe((status) => {
+                console.log("Chat sub status:", status);
+                if (status === "CHANNEL_ERROR") {
+                    console.error("Chat REALTIME failed.");
+                }
+            });
+
+        // Subscribe session delete
+        sessionSubscription = client
+            .channel(`session:${sessionId}`)
+            .on("postgres_changes", {
+                event: "DELETE",
+                schema: "public",
+                table: "random_sessions",
+                filter: `id=eq.${sessionId}`
+            }, () => handlePartnerSkip())
+            .subscribe();
+
+    } catch (err) {
+        console.error("Init Chat Failed:", err);
+    }
 }
 
-// ==========================================
-// DISPLAY MESSAGE
-// ==========================================
 function displayMessage(msg) {
     const list = document.getElementById("messageList");
     if (!list) return;
@@ -107,52 +130,43 @@ function displayMessage(msg) {
     const div = document.createElement("div");
     div.className = `message ${msg.sender === username ? "sent" : "received"}`;
     div.innerText = msg.message;
-
     list.appendChild(div);
 }
 
-// ==========================================
-// SEND MESSAGE
-// ==========================================
 async function sendMessage() {
     const input = document.getElementById("chatInput");
-    const text = input.value.trim();
+    const text = input?.value?.trim();
 
-    if (!text || !sessionId) return;
+    if (!text || !sessionId || !client) return;
 
     input.value = "";
-
     const statusEl = document.getElementById("chatStatus");
     if (statusEl) statusEl.innerText = "";
 
-    const { error } = await client.from("random_messages").insert({
-        session_id: sessionId,
-        sender: username,
-        message: text
-    });
+    try {
+        const { error } = await client.from("random_messages").insert({
+            session_id: sessionId,
+            sender: username,
+            message: text
+        });
 
-    if (error) {
-        console.error(error);
-        showError("Your message couldn't be sent. Please check your connection.");
-        return;
+        if (error) {
+            console.error(error);
+            if (window.showToast) showToast("Message failed to send.");
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
-// ==========================================
-// SCROLL HANDLING (FIXED)
-// ==========================================
 function scrollToBottom() {
     const list = document.getElementById("messageList");
     if (!list) return;
-
     setTimeout(() => {
         list.scrollTop = list.scrollHeight;
     }, 100);
 }
 
-// ==========================================
-// PARTNER SKIP HANDLER
-// ==========================================
 function handlePartnerSkip() {
     const list = document.getElementById("messageList");
     const btn = document.getElementById("skipBtn");
@@ -183,11 +197,9 @@ function handlePartnerSkip() {
     localStorage.removeItem("misto_random_partner");
 }
 
-// ==========================================
-// SKIP BUTTON LOGIC
-// ==========================================
 async function handleSkipClick() {
     const btn = document.getElementById("skipBtn");
+    if (!btn) return;
 
     if (btn.innerText === "Skip") {
         btn.innerText = "Sure?";
@@ -210,11 +222,11 @@ async function confirmSkip() {
     const status = document.getElementById("chatStatus");
 
     if (status) status.innerText = "Ending chat...";
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
 
     cleanupSubscriptions();
 
-    if (sessionId) {
+    if (sessionId && client) {
         await client.from("random_sessions").delete().eq("id", sessionId);
     }
 
@@ -223,16 +235,15 @@ async function confirmSkip() {
 
     const list = document.getElementById("messageList");
     if (list) {
-        list.innerHTML = `
-            <div style="text-align:center;color:#6366f1;margin-top:20px;">
-                You skipped the chat.
-            </div>`;
+        list.innerHTML = `<div style="text-align:center;color:#6366f1;margin-top:20px;">You skipped the chat.</div>`;
     }
 
-    btn.innerText = "Start";
-    btn.classList.remove("confirm");
-    btn.classList.add("start");
-    btn.disabled = false;
+    if (btn) {
+        btn.innerText = "Start";
+        btn.classList.remove("confirm");
+        btn.classList.add("start");
+        btn.disabled = false;
+    }
 
     const input = document.getElementById("chatInput");
     if (input) {
@@ -241,33 +252,36 @@ async function confirmSkip() {
     }
 }
 
-// ==========================================
-// CLEANUP
-// ==========================================
 function cleanupSubscriptions() {
-    if (chatSubscription) client.removeChannel(chatSubscription);
-    if (sessionSubscription) client.removeChannel(sessionSubscription);
-}
-
-// ==========================================
-// EXIT CHAT
-// ==========================================
-async function exitChat() {
-    cleanupSubscriptions();
-
-    if (sessionId) {
-        await client.from("random_sessions").delete().eq("id", sessionId);
+    if (client) {
+        if (chatSubscription) client.removeChannel(chatSubscription);
+        if (sessionSubscription) client.removeChannel(sessionSubscription);
     }
-
-    localStorage.removeItem("misto_random_session");
-    localStorage.removeItem("misto_random_partner");
-
-    window.location.href = "app.html";
 }
 
-// ==========================================
-// MENU
-// ==========================================
+async function exitChat() {
+    if (window.showConfirm) {
+        showConfirm("Are you sure you want to exit? Your session will end.", async () => {
+            cleanupSubscriptions();
+            if (sessionId && client) {
+                await client.from("random_sessions").delete().eq("id", sessionId);
+            }
+            localStorage.removeItem("misto_random_session");
+            localStorage.removeItem("misto_random_partner");
+            window.location.href = "app.html";
+        });
+    } else {
+        if (confirm("Exit chat?")) {
+            // ... same logic
+            cleanupSubscriptions();
+            if (sessionId && client) await client.from("random_sessions").delete().eq("id", sessionId);
+            localStorage.removeItem("misto_random_session");
+            localStorage.removeItem("misto_random_partner");
+            window.location.href = "app.html";
+        }
+    }
+}
+
 window.toggleMenu = function () {
     document.getElementById("sideMenu")?.classList.toggle("active");
     document.getElementById("overlay")?.classList.toggle("active");
@@ -278,37 +292,8 @@ window.logout = function () {
     window.location.href = "index.html";
 };
 
-function loadMenuUser() {
-    const u = localStorage.getItem("vanta_username");
-    if (!u) return;
-
-    document.getElementById("menuUsername").innerText = u;
-    document.getElementById("menuAvatar").innerText = u[0].toUpperCase();
-}
-
-// ==========================================
-// KEYBOARD + TYPING + INPUT
-// ==========================================
 const inputEl = document.getElementById("chatInput");
-
-function setupKeyboardResize() {
-    if (!window.visualViewport) return;
-    const updateView = () => {
-        const vv = window.visualViewport;
-        const keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
-        document.documentElement.style.setProperty("--keyboard-height", keyboardHeight + "px");
-        scrollToBottom();
-    };
-    window.visualViewport.addEventListener("resize", updateView);
-    window.visualViewport.addEventListener("scroll", updateView);
-    updateView();
-}
-
-inputEl?.addEventListener("focus", () => {
-    scrollToBottom();
-    setupKeyboardResize();
-});
-
+inputEl?.addEventListener("focus", scrollToBottom);
 inputEl?.addEventListener("input", () => {
     scrollToBottom();
     clearTimeout(typingTimeout);
@@ -317,29 +302,26 @@ inputEl?.addEventListener("input", () => {
         typingTimeout = setTimeout(() => { sendTypingBroadcast(); }, 500);
     }
 });
-
-if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", scrollToBottom);
-}
-
 inputEl?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
 
-// ==========================================
-// INIT
-// ==========================================
+// Initialization
 async function runInit() {
-    loadMenuUser();
+    const u = localStorage.getItem("vanta_username");
+    if (u) {
+        const uEl = document.getElementById("menuUsername");
+        const aEl = document.getElementById("menuAvatar");
+        if (uEl) uEl.innerText = u;
+        if (aEl) aEl.innerText = u[0].toUpperCase();
+    }
     await initChat();
 }
 
-runInit();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runInit);
+} else {
+    runInit();
+}
 
-// Init keyboard offset for mobile
-document.documentElement.style.setProperty("--keyboard-height", "0px");
-
-// CLEANUP ON CLOSE
-window.addEventListener("beforeunload", () => {
-    cleanupSubscriptions();
-});
+window.addEventListener("beforeunload", cleanupSubscriptions);

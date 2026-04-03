@@ -90,27 +90,7 @@
         </div>
     </div>
 
-    <!-- EXIT CONFIRM MODAL -->
-    <div id="confirmModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:5000; align-items:center; justify-content:center;">
-        <div
-            style="background:#111; padding:30px; border-radius:20px; text-align:center; width:80%; max-width:300px; border:1px solid rgba(255,255,255,0.1);">
-            <h3 style="margin-bottom:10px;">Skip this chat?</h3>
-            <p style="color:#666; font-size:14px; margin-bottom:24px;">This will delete all messages and end the
-                session.</p>
-            <div style="display:flex; gap:10px;">
-                <button onclick="document.getElementById('confirmModal').style.display='none'"
-                    style="flex:1; padding:12px; border-radius:10px; border:none; background:#222; color:white; cursor:pointer;">Cancel</button>
-                <button onclick="confirmSkip()"
-                    style="flex:1; padding:12px; border-radius:10px; border:none; background:#6366f1; color:white; cursor:pointer;">Yes,
-                    Skip</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="popups.js"></script>
-    <script src="randomChat.js"></script>
-
+    <!-- VANTA UNIFIED POPUP SYSTEM -->
     <div id="vantaPopup" class="vanta-popup">
         <div class="vanta-popup-overlay" onclick="closePopup()"></div>
         <div class="vanta-popup-card">
@@ -123,7 +103,10 @@
 
     <!-- VANTA TOAST SYSTEM -->
     <div id="vantaToast" class="vanta-toast"></div>
-</body>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="popups.js"></script>
+    <script src="randomChat.js"></script>
+</body>
 
 </html>
