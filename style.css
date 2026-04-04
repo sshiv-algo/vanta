@@ -341,9 +341,6 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
-.dur1.active-dur {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-}
 
 .duration-btn.active-dur {
     background: linear-gradient(135deg, #6366f1, #8b5cf6);

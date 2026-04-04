@@ -125,21 +125,37 @@ async function createSession(partner) {
 
         if (sessionErr) throw sessionErr;
 
-        // Cleanup waiting list for BOTH (User1 does this for both)
-        console.log("Session inserted. Cleaning up waiting list...");
+        // Cleanup waiting list
         await client.from("waiting_users").delete().in("username", [username, partner.username])
         
-        // IMPORTANT: We do NOT call completeMatch here anymore.
-        // Both the initiator and the partner will wait for the Realtime 'INSERT' 
-        // event to navigate simultaneously.
+        // BROADCAST the match to the partner
+        // Note: Supabase send() usually doesn't send to self by default.
+        console.log("Broadcasting match found to channel...");
+        await waitingSubscription.send({
+            type: 'broadcast',
+            event: 'match_found',
+            payload: {
+                sessionId,
+                user1: username,
+                user2: partner.username
+            }
+        });
+
+        // Initiator (User1) navigates locally after broadcasting
+        console.log("Initiator navigating to chat...");
+        completeMatch(sessionId, partner.username);
+
     } catch (err) {
+
         console.error("Session Creation Error:", err);
         cancelMatching();
     }
 }
 
 
+
 function listenForWaitingUsers() {
+    console.log("Listening for waiting users + broadcasts...");
     waitingSubscription = client
         .channel('public:waiting_users')
         .on('postgres_changes', {
@@ -151,39 +167,46 @@ function listenForWaitingUsers() {
                 createSession(payload.new);
             }
         })
+        .on('broadcast', { event: 'match_found' }, (payload) => {
+            const data = payload.payload;
+            if (data.user1 === username || data.user2 === username) {
+                console.log("MATCH BROADCAST RECEIVED! Navigating to chat...");
+                const partner = data.user1 === username ? data.user2 : data.user1;
+                completeMatch(data.sessionId, partner);
+            }
+        })
         .subscribe()
 }
 
+
 function listenForSessions() {
-    console.log("Listening for matches (Synchronized)...");
-    
-    // We use a shared channel for all session events related to ME
+    console.log("Listening for session fallback events...");
     matchSubscription = client
-        .channel('public:random_sessions_sync')
-        // Case A: I am User 1 (Initiator)
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'random_sessions',
-            filter: `user1=eq.${username}`
-        }, (payload) => {
-            console.log("MATCH FOUND (Initiator Role): Synchronizing transition...");
-            completeMatch(payload.new.id, payload.new.user2);
-        })
-        // Case B: I am User 2 (Partner)
+        .channel('public:random_sessions_fallback')
+        // Role A: I was the waiting partner (User2)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'random_sessions',
             filter: `user2=eq.${username}`
         }, (payload) => {
-            console.log("MATCH FOUND (Partner Role): Synchronizing transition...");
+            console.log("POSTGRES FALLBACK: Match found (User2 role).");
             completeMatch(payload.new.id, payload.new.user1);
         })
-        .subscribe((status) => {
-            console.log("Match subscription status:", status);
+        // Role B: I was the initiator (User1) - Fallback for local nav failure
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'random_sessions',
+            filter: `user1=eq.${username}`
+        }, (payload) => {
+            console.log("POSTGRES FALLBACK: Match found (User1 role).");
+            completeMatch(payload.new.id, payload.new.user2);
         })
+        .subscribe()
 }
+
+
 
 function stopSubscriptions() {
     if (matchSubscription) client.removeChannel(matchSubscription)

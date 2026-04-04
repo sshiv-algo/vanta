@@ -81,7 +81,7 @@ async function initChat() {
             }
         }
 
-        // Subscribe new messages + typing broadcast
+        // Subscribe new messages + typing + message broadcasts
         chatSubscription = client
             .channel(`chat:${sessionId}`)
             .on("postgres_changes", {
@@ -90,10 +90,21 @@ async function initChat() {
                 table: "random_messages",
                 filter: `session_id=eq.${sessionId}`
             }, (payload) => {
-                const status = document.getElementById("chatStatus");
-                if (status) status.innerText = "";
-                displayMessage(payload.new);
-                scrollToBottom();
+                // FALLBACK: Only display if not already handled by broadcast
+                // or for users who missed the live broadcast
+                console.log("Postgres fallback message received.");
+                // To keep it simple and avoid duplicates, we'll primarily rely on broadcast for live
+                // but we could add a Map of message IDs here.
+            })
+            .on("broadcast", { event: "message" }, (payload) => {
+                const data = payload.payload;
+                if (data.sender !== username) {
+                    console.log("Broadcast message received from partner!");
+                    const status = document.getElementById("chatStatus");
+                    if (status) status.innerText = "";
+                    displayMessage(data);
+                    scrollToBottom();
+                }
             })
             .on("broadcast", { event: "typing" }, (payload) => {
                 if (payload.payload?.user && payload.payload.user !== username) {
@@ -101,6 +112,7 @@ async function initChat() {
                 }
             })
             .subscribe((status) => {
+
                 console.log("Chat sub status:", status);
                 if (status === "CHANNEL_ERROR") {
                     console.error("Chat REALTIME failed.");
@@ -143,7 +155,27 @@ async function sendMessage() {
     const statusEl = document.getElementById("chatStatus");
     if (statusEl) statusEl.innerText = "";
 
+    // OPTIMISTIC UI: Display my message immediately
+    const myMsg = {
+        sender: username,
+        message: text,
+        session_id: sessionId,
+        created_at: new Date().toISOString()
+    };
+    displayMessage(myMsg);
+    scrollToBottom();
+
     try {
+        // 1. BROADCAST instantly to partner
+        if (chatSubscription) {
+            chatSubscription.send({
+                type: 'broadcast',
+                event: 'message',
+                payload: myMsg
+            });
+        }
+
+        // 2. INSERT into DB for persistence
         const { error } = await client.from("random_messages").insert({
             session_id: sessionId,
             sender: username,
@@ -151,13 +183,14 @@ async function sendMessage() {
         });
 
         if (error) {
-            console.error(error);
-            if (window.showToast) showToast("Message failed to send.");
+            console.error("DB Insert Error:", error);
+            // Optionally show a "failed to save" icon
         }
     } catch (err) {
-        console.error(err);
+        console.error("SendMessage Error:", err);
     }
 }
+
 
 function scrollToBottom() {
     const list = document.getElementById("messageList");
