@@ -129,6 +129,27 @@
             <div id="viewerText" class="story-body"></div>
         </div>
 
+        <!-- REACTION PICKER PANEL -->
+        <div id="reactionPanel" class="reaction-panel">
+            <div class="reaction-panel-overlay" onclick="closeReactionPanel()"></div>
+            <div class="reaction-panel-content">
+                <div class="reaction-panel-header">
+                    <div class="drag-handle"></div>
+                </div>
+                <div class="reaction-grid">
+                    <button onclick="event.stopPropagation(); sendReaction('😂')">😂</button>
+                    <button onclick="event.stopPropagation(); sendReaction('😮')">😮</button>
+                    <button onclick="event.stopPropagation(); sendReaction('😍')">😍</button>
+                    <button onclick="event.stopPropagation(); sendReaction('😢')">😢</button>
+                    <button onclick="event.stopPropagation(); sendReaction('👏')">👏</button>
+                    <button onclick="event.stopPropagation(); sendReaction('🔥')">🔥</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- REACTION ANIMATION CONTAINER -->
+        <div id="reactionAnimationContainer" class="reaction-anim-container"></div>
+
         <!-- REPLY BOX -->
         <div id="replyBox" class="story-reply-box hidden">
             <input type="text" id="replyInput" class="reply-input" placeholder="Reply to story..."

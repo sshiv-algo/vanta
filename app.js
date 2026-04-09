@@ -232,8 +232,28 @@ async function loadStories() {
         viewers: []
     }]
 
-    const unseen = Object.keys(users).filter(u => !viewed[u])
-    const seen = Object.keys(users).filter(u => viewed[u])
+    const localSeen = JSON.parse(localStorage.getItem("seenStoryIds")) || [];
+
+    const unseen = Object.keys(users).filter(u => {
+        if (u === "Misto Official") return !viewed[u];
+        
+        const stories = users[u];
+        return stories.some(s => {
+            if (localSeen.includes(s.id)) return false;
+            const viewers = s.viewers || [];
+            const inDb = viewers.some(v => (typeof v === "string" ? v : v.username) === username);
+            if (inDb) {
+                if (!localSeen.includes(s.id)) {
+                    localSeen.push(s.id);
+                    localStorage.setItem("seenStoryIds", JSON.stringify(localSeen));
+                }
+                return false;
+            }
+            return true;
+        });
+    });
+
+    const seen = Object.keys(users).filter(u => !unseen.includes(u));
 
     // Sorting: 1. Official first, 2. Exclusive (1h) stories, 3. Normal
     const sortPriority = (arr) => arr.sort((a, b) => {
@@ -264,7 +284,8 @@ async function loadStories() {
 
     sorted.forEach(user => {
 
-        const ring = viewed[user] ? "seen" : "unseen"
+        const isUnseen = unseen.includes(user);
+        const ring = isUnseen ? "unseen" : "seen";
         const stories = users[user]
         
         const hasExclusive = stories.some(s => {
@@ -293,7 +314,15 @@ async function loadStories() {
             </div>
         `
 
-        div.onclick = () => openStorySequence(stories, 0)
+        const startIndex = stories.findIndex(s => {
+            if (s.id === "misto-official") return false;
+            if (localSeen.includes(s.id)) return false;
+            const viewers = s.viewers || [];
+            return !viewers.some(v => (typeof v === "string" ? v : v.username) === username);
+        });
+        const startIdx = startIndex !== -1 ? startIndex : 0;
+
+        div.onclick = () => openStorySequence(stories, startIdx)
 
         container.appendChild(div)
     })
@@ -347,6 +376,8 @@ function openStory(story) {
             if (replyInput) replyInput.value = ""
         }
     }
+
+    closeReactionPanel(); // Ensure panel closes across jumps
 
     // REMOVE OLD EYE
     const oldEye = document.querySelector(".view-count")
@@ -495,6 +526,27 @@ function openStorySequence(stories, index) {
 function showStory() {
 
     const story = currentStories[currentIndex]
+    
+    const localSeen = JSON.parse(localStorage.getItem("seenStoryIds")) || [];
+    if (!localSeen.includes(story.id) && story.username !== username) {
+        localSeen.push(story.id);
+        localStorage.setItem("seenStoryIds", JSON.stringify(localSeen));
+        
+        const unseenRemaining = currentStories.some(s => !localSeen.includes(s.id));
+        if (!unseenRemaining) {
+            document.querySelectorAll(".status-item").forEach(item => {
+                const b = item.querySelector("b");
+                if (b && b.innerText.includes(story.username)) {
+                    const circle = item.querySelector(".status-circle");
+                    if (circle) {
+                        circle.classList.remove("unseen");
+                        circle.classList.add("seen");
+                    }
+                }
+            });
+        }
+    }
+
     openStory(story)
 
     if (story.username !== username) {
@@ -640,6 +692,9 @@ function setupViewerControls() {
             if (story && story.username === username) {
                 openViewerList()
                 return // Don't resume story, wait for list to close
+            } else if (story && story.username !== username && story.id !== "misto-official") {
+                openReactionPanel()
+                return // Wait for panel to close
             }
         }
 
@@ -651,7 +706,6 @@ function setupViewerControls() {
 
     // Swipe down to close viewer list
     const viewerSheet = document.getElementById("viewerList")
-    const sheetContent = document.querySelector(".viewer-sheet-content")
 
     viewerSheet.addEventListener("touchstart", (e) => {
         startY = e.touches[0].clientY
@@ -664,6 +718,38 @@ function setupViewerControls() {
             closeViewerList()
         }
     })
+
+    // Swipe down to close reaction panel
+    const reactPanel = document.getElementById("reactionPanel")
+    if (reactPanel) {
+        reactPanel.addEventListener("touchstart", (e) => {
+            startY = e.touches[0].clientY
+        }, { passive: true })
+        
+        reactPanel.addEventListener("touchend", (e) => {
+            endY = e.changedTouches[0].clientY
+            const deltaY = endY - startY
+            if (deltaY > 50) {
+                closeReactionPanel()
+            }
+        })
+    }
+}
+
+function openReactionPanel() {
+    isViewerOpen = true;
+    pauseStory();
+    const panel = document.getElementById("reactionPanel");
+    if (panel) panel.classList.add("active");
+}
+
+function closeReactionPanel() {
+    isViewerOpen = false;
+    const panel = document.getElementById("reactionPanel");
+    if (panel) panel.classList.remove("active");
+    if (document.getElementById("viewer") && !document.getElementById("viewer").classList.contains("hidden")) {
+       resumeStory();
+    }
 }
 
 
@@ -696,6 +782,7 @@ function openViewerList() {
     } else {
         list.innerHTML = ""
         filtered.forEach(v => {
+            const reactionBadge = v.reaction ? `<div class="viewer-reaction-badge">${v.reaction}</div>` : "";
             const div = document.createElement("div")
             div.className = "viewer-item"
             div.innerHTML = `
@@ -704,6 +791,7 @@ function openViewerList() {
                     <span class="viewer-name">${v.username}</span>
                     <span class="viewer-time">${formatTime(v.time)}</span>
                 </div>
+                ${reactionBadge}
             `
             list.appendChild(div)
         })
@@ -900,16 +988,29 @@ async function clearChatMessages(convoId) {
 
     console.log("Vanish Mode Cleanup: Processing exit purge...")
 
-    // Delete regular messages where seen_at is NOT NULL
-    // But KEEP story replies (they stay for 24h)
-    const { error } = await client
+    // PER-USER VANISH LOGIC: Add username to cleared_by array
+    const { data: msgsToClear } = await client
         .from("messages")
-        .delete()
+        .select("id, cleared_by")
         .eq("conversation_id", convoId)
-        .not("seen_at", "is", null)
         .eq("is_story_reply", false)
+        .not('cleared_by', 'cs', '{"' + username + '"}')
 
-    if (error) console.error("Exit Cleanup Error:", error)
+    if (msgsToClear && msgsToClear.length > 0) {
+        for (const m of msgsToClear) {
+            let arr = m.cleared_by || []
+            if (!arr.includes(username)) {
+                arr.push(username)
+                
+                // If both users have cleared it (or it's the only 2 users), delete it completely to save space
+                if (arr.length >= 2) {
+                    client.from("messages").delete().eq("id", m.id).then()
+                } else {
+                    client.from("messages").update({ cleared_by: arr }).eq("id", m.id).then()
+                }
+            }
+        }
+    }
 
     // Background Cleanup: Delete story replies older than 24h
     const dayAgo = new Date(Date.now() - 86400000).toISOString()
@@ -950,6 +1051,93 @@ async function exitChat() {
     window.location.href = "inbox.html"
 }
 
+// ================== STORY REACTIONS ==================
+
+async function sendReaction(emoji) {
+    if (!currentStories || currentStories.length === 0) return;
+    const story = currentStories[currentIndex];
+    if (!story || story.username === username || story.id === "misto-official") return;
+
+    // 1. Play haptic float visual
+    playReactionAnim(emoji);
+    closeReactionPanel();
+
+    // 2. Update DB viewers array
+    const { data } = await client
+        .from("stories")
+        .select("viewers")
+        .eq("id", story.id)
+        .single();
+        
+    let viewers = (data?.viewers || []).map(v => 
+        typeof v === "string" ? { username: v, time: new Date().toISOString(), reaction: null } : v
+    );
+
+    let myView = viewers.find(v => v.username === username);
+    if (!myView) {
+        myView = { username: username, time: new Date().toISOString(), reaction: emoji };
+        viewers.push(myView);
+    } else {
+        myView.reaction = emoji;
+    }
+
+    await client.from("stories").update({ viewers }).eq("id", story.id);
+    
+    // Update local state so it renders correctly if viewer list is opened
+    currentViewers = viewers;
+
+    // 3. Send chat message if conversation exists
+    checkAndSendReactionMessage(story.username, emoji);
+}
+
+function playReactionAnim(emoji) {
+    const container = document.getElementById("reactionAnimationContainer");
+    if (!container) return;
+    
+    const count = Math.floor(Math.random() * 3) + 3; // 3 to 5 emojis
+    
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const el = document.createElement("div");
+            el.className = "floating-reaction";
+            el.innerText = emoji;
+            // Random horizontal drift between -30px and 30px
+            const dx = (Math.random() - 0.5) * 60;
+            el.style.setProperty("--dx", `${dx}px`);
+            
+            // Randomly scale starting size a bit
+            const scale = 0.8 + Math.random() * 0.4;
+            el.style.transform = `translateX(-50%) translateY(0) scale(${scale})`;
+            
+            container.appendChild(el);
+            
+            setTimeout(() => {
+                if (el.parentNode) el.remove();
+            }, 1200);
+        }, i * 150); // Stagger animations
+    }
+}
+
+async function checkAndSendReactionMessage(receiver, emoji) {
+    // Check if conversation exists
+    const { data: convo, error } = await client
+        .from("conversations")
+        .select("id")
+        .or(`and(user1.eq.${username},user2.eq.${receiver}),and(user1.eq.${receiver},user2.eq.${username})`)
+        .single();
+        
+    if (convo && convo.id) {
+        // Conversation exists! Send reaction message
+        await client.from("messages").insert({
+            conversation_id: convo.id,
+            sender: username,
+            message: `${emoji} reacted to your story`,
+            is_story_reply: true,
+            seen_at: null
+        });
+    }
+}
+
 async function loadChats() {
     const list = document.getElementById("chatList")
     if (!list) return
@@ -986,7 +1174,7 @@ async function loadChats() {
             .select("*", { count: 'exact', head: true })
             .eq("conversation_id", convo.id)
             .neq("sender", username)
-            .eq("seen", false)
+            .is("seen_at", null)
             .not('cleared_by', 'cs', '{"' + username + '"}')
 
         const isUnread = !countErr && count > 0
@@ -1044,6 +1232,7 @@ async function loadMessages() {
         .from("messages")
         .select("*")
         .eq("conversation_id", convoId)
+        .not('cleared_by', 'cs', '{"' + username + '"}')
         .order("created_at", { ascending: true })
 
     if (error) return
@@ -1065,19 +1254,8 @@ async function loadMessages() {
         wrapper.id = `msg-${msg.id}`
         wrapper.className = `message-wrapper ${isMe ? "me" : "other"}`
 
-        // FADE OUT TIMER: Only for regular messages (NOT story replies)
-        if (msg.seen_at && !msg.is_story_reply) {
-            wrapper.classList.add("vanishing")
-            const seenTime = new Date(msg.seen_at).getTime()
-            const elapsed = Date.now() - seenTime
-            const remaining = Math.max(0, 30000 - elapsed)
-
-            setTimeout(async () => {
-                await client.from("messages").delete().eq("id", msg.id)
-            }, remaining)
-        }
-
-        const replyLabel = msg.is_story_reply ? '<div class="story-reply-label">replied to your story</div>' : ''
+        const replyLabelText = isMe ? "you replied to their story" : "replied to your story"
+        const replyLabel = msg.is_story_reply ? `<div class="story-reply-label">${replyLabelText}</div>` : ''
         const seenIndicator = (msg.seen_at && !msg.is_story_reply) ? '<span class="seen-label">Seen</span>' : ''
 
         wrapper.innerHTML = `
@@ -1089,6 +1267,24 @@ async function loadMessages() {
     })
 
     list.scrollTop = list.scrollHeight
+}
+
+async function exitChat() {
+    const convoId = localStorage.getItem("chat_id");
+    
+    // UI Fade Out
+    document.querySelectorAll(".message-wrapper").forEach(msg => {
+        msg.style.transition = "opacity 0.25s ease-out";
+        msg.style.opacity = "0";
+    });
+
+    // Wait for animation, then navigate
+    setTimeout(async () => {
+        if (convoId) {
+            await clearChatMessages(convoId);
+        }
+        window.location.href = "inbox.html";
+    }, 280);
 }
 
 async function sendChat() {
@@ -1131,9 +1327,47 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener("pagehide", () => clearChatMessages(cid))
         // REMOVED visibilitychange as it's too aggressive and causes "vanishing while in chat"
 
-        // Real-time: Remove messages instantly when deleted from DB
-        client
-            .channel(`public:messages:convo:${cid}`)
+        // Typing Timeout global variables
+        let sendTypingTimeout = null;
+        let receiveTypingTimeout = null;
+        const msgChannel = client.channel(`public:messages:convo:${cid}`);
+
+        const inputEl = document.getElementById("chatInput");
+        if (inputEl) {
+            inputEl.addEventListener("input", () => {
+                if (inputEl.value.trim().length > 0) {
+                    msgChannel.send({
+                        type: 'broadcast',
+                        event: 'typing',
+                        payload: { user: username }
+                    });
+                    
+                    clearTimeout(sendTypingTimeout);
+                    sendTypingTimeout = setTimeout(() => {
+                        msgChannel.send({
+                            type: 'broadcast',
+                            event: 'typing',
+                            payload: { user: username }
+                        });
+                    }, 500);
+                }
+            });
+        }
+
+        // Real-time: Handle typing, deletes, and updates
+        msgChannel
+            .on('broadcast', { event: 'typing' }, (payload) => {
+                if (payload.payload?.user && payload.payload.user !== username) {
+                    const status = document.getElementById("chatTypingStatus");
+                    if (status) {
+                        status.innerText = "typing...";
+                        clearTimeout(receiveTypingTimeout);
+                        receiveTypingTimeout = setTimeout(() => {
+                            status.innerText = "";
+                        }, 2500);
+                    }
+                }
+            })
             .on('postgres_changes', {
                 event: 'DELETE',
                 schema: 'public',

@@ -12,19 +12,22 @@
 <body>
     <div class="chat-page">
         <div class="chat-header">
-            <div class="back-btn" onclick="window.location.href='inbox.html'">
+            <div class="back-btn" onclick="exitChat()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
             </div>
-            <h2 id="chatActiveUser">Chat</h2>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 12px;">
+                <h2 id="chatActiveUser" style="margin: 0; line-height: 1;">Chat</h2>
+                <div id="chatTypingStatus" style="font-size: 11px; color: #a78bfa; height: 12px; margin-top: 2px;"></div>
+            </div>
         </div>
 
         <div class="vanishing-banner">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            Messages vanish after they've been seen
+            Messages vanish when you close the chat
         </div>
 
         <div id="messagesList" class="messages-container">

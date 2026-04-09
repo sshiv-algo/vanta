@@ -1665,3 +1665,184 @@ body {
 body.popup-open {
     overflow: hidden;
 }
+
+/* ================== REACTION SYSTEM ================== */
+
+.reaction-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 12000;
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0.25s;
+}
+
+.reaction-panel.active {
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.reaction-panel-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.reaction-panel.active .reaction-panel-overlay {
+    opacity: 1;
+}
+
+.reaction-panel-content {
+    position: absolute;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background: rgba(18, 18, 18, 0.95);
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding: 10px 24px 34px;
+    transition: bottom 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.reaction-panel.active .reaction-panel-content {
+    bottom: 0;
+}
+
+.reaction-panel-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 20px;
+}
+
+.drag-handle {
+    width: 40px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 100px;
+}
+
+.reaction-grid {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 10px;
+}
+
+.reaction-grid button {
+    background: none;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    padding: 8px;
+    line-height: 1;
+    outline: none;
+    border-radius: 50%;
+}
+
+.reaction-grid button:nth-child(1),
+.reaction-grid button:nth-child(6) {
+    transform: translateY(12px);
+}
+
+.reaction-grid button:nth-child(2),
+.reaction-grid button:nth-child(5) {
+    transform: translateY(2px);
+}
+
+.reaction-grid button:nth-child(3),
+.reaction-grid button:nth-child(4) {
+    transform: translateY(-4px);
+}
+
+.reaction-grid button:hover {
+    background: rgba(127, 90, 240, 0.1);
+    filter: drop-shadow(0 0 15px rgba(127, 90, 240, 0.7));
+}
+
+.reaction-grid button:nth-child(1):hover,
+.reaction-grid button:nth-child(6):hover {
+    transform: translateY(8px) scale(1.3);
+}
+
+.reaction-grid button:nth-child(2):hover,
+.reaction-grid button:nth-child(5):hover {
+    transform: translateY(-2px) scale(1.3);
+}
+
+.reaction-grid button:nth-child(3):hover,
+.reaction-grid button:nth-child(4):hover {
+    transform: translateY(-8px) scale(1.3);
+}
+
+.reaction-grid button:nth-child(1):active,
+.reaction-grid button:nth-child(6):active {
+    transform: translateY(12px) scale(0.9);
+}
+
+.reaction-grid button:nth-child(2):active,
+.reaction-grid button:nth-child(5):active {
+    transform: translateY(2px) scale(0.9);
+}
+
+.reaction-grid button:nth-child(3):active,
+.reaction-grid button:nth-child(4):active {
+    transform: translateY(-4px) scale(0.9);
+}
+
+/* Container for floating animations */
+.reaction-anim-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 45;
+    overflow: hidden;
+}
+
+.floating-reaction {
+    position: absolute;
+    font-size: 40px;
+    bottom: 90px;
+    left: 50%;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    filter: drop-shadow(0 0 10px rgba(127, 90, 240, 0.5));
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateX(calc(-50% + var(--dx, 0px))) translateY(0) scale(0.6);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateX(calc(-50% + var(--dx, 0px))) translateY(-20px) scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(calc(-50% + var(--dx, 0px) * 2)) translateY(-200px) scale(1);
+    }
+}
+
+.viewer-reaction-badge {
+    font-size: 18px;
+    margin-left: auto;
+    filter: drop-shadow(0 0 5px rgba(127, 90, 240, 0.4));
+    animation: scaleIn 0.3s ease;
+}
