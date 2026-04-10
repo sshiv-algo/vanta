@@ -47,8 +47,15 @@ CREATE POLICY "Allow all access to random_messages" ON random_messages FOR ALL U
 DROP INDEX IF EXISTS idx_waiting_users_created;
 CREATE INDEX idx_waiting_users_created ON waiting_users(created_at);
 
--- 7. Enable Realtime for matchmaking and chat
--- This allows the app to listen for new users and matches instantly
+-- 7. Unique constraint: prevent duplicate active sessions between the same pair of users
+-- LEAST/GREATEST ensures (alice, bob) and (bob, alice) are treated the same.
+-- This means even if two clients race to insert a session, only ONE succeeds.
+DROP INDEX IF EXISTS idx_unique_active_session_pair;
+CREATE UNIQUE INDEX idx_unique_active_session_pair
+    ON random_sessions (LEAST(user1, user2), GREATEST(user1, user2))
+    WHERE active = true;
+
+-- 8. Enable Realtime for matchmaking and chat
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'waiting_users') THEN
@@ -62,6 +69,5 @@ BEGIN
     END IF;
 EXCEPTION
     WHEN OTHERS THEN
-        -- If publication doesn't exist, ignore or handle accordingly
         RAISE NOTICE 'Could not add tables to publication. Ensure publication "supabase_realtime" exists.';
 END $$;

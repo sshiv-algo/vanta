@@ -240,16 +240,43 @@
     }
 
     .random-layout .message-list {
-        padding-bottom: 100px;
+        padding-bottom: 120px;
     }
 }
 
 
 .chat-status {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 4px;
-    min-height: 16px;
+    margin-bottom: 8px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Typing Dots Animation --- */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.typing-indicator .dot {
+    width: 5px;
+    height: 5px;
+    background: currentColor;
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.3); opacity: 0.9; }
 }
 
 .input-area {
@@ -384,3 +411,46 @@
         right: max(16px, env(safe-area-inset-right));
     }
 }
+
+/* ================== GHOST BUTTONS ================== */
+.btn-ghost {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin: 20px auto 0 !important;
+    font-family: inherit !important;
+    text-decoration: none !important;
+    width: auto !important;
+}
+
+.btn-ghost:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.btn-ghost svg {
+    transition: transform 0.2s ease !important;
+}
+
+.btn-ghost:hover svg {
+    transform: translateX(-3px) !important;
+}
+
+body.light-mode .btn-ghost {
+    color: #666 !important;
+}
+
+body.light-mode .btn-ghost:hover {
+    color: #1a1a1a !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+}

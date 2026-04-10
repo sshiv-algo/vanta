@@ -8,6 +8,12 @@ let isLongPress = false
 let touchTimer = null
 let selectedDuration = null
 
+// --- Notifications & Sound ---
+let currentChatId = null;
+const messageSound = new Audio("assets/sounds/message.mp3");
+messageSound.volume = 1.0;
+let lastSoundTime = 0;
+
 
 // Swipe tracking
 let startY = 0
@@ -48,24 +54,128 @@ if (!username || username === "null" || username === "undefined") {
 // ================== GENDER ==================
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Theme initialization
+    const savedTheme = localStorage.getItem("vanta_theme")
+    if (savedTheme === "light") {
+        document.body.classList.add("light-mode")
+    }
 
-    const modal = document.getElementById("genderModal")
-    const gender = localStorage.getItem("vanta_gender")
+    // Notifications initialization
+    const notificationsToggle = document.getElementById("notificationsToggle")
+    if (notificationsToggle) {
+        // Default to true if not set
+        if (localStorage.getItem("notifications") === null) {
+            localStorage.setItem("notifications", "true");
+        }
+        notificationsToggle.checked = localStorage.getItem("notifications") === "true"
+        notificationsToggle.addEventListener("change", (e) => {
+            localStorage.setItem("notifications", e.target.checked)
+        })
+    }
 
-    if (gender && gender !== "null" && gender !== "undefined") {
-        modal.style.display = "none"
+    // Dark Mode Toggle
+    const darkModeToggle = document.getElementById("darkModeToggle")
+    if (darkModeToggle) {
+        darkModeToggle.checked = !document.body.classList.contains("light-mode")
+        darkModeToggle.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                document.body.classList.remove("light-mode")
+                localStorage.setItem("vanta_theme", "dark")
+            } else {
+                document.body.classList.add("light-mode")
+                localStorage.setItem("vanta_theme", "light")
+            }
+        })
+    }
+
+    // Share Button
+    const shareBtn = document.getElementById("shareBtn")
+    if (shareBtn) {
+        shareBtn.onclick = () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: "Misto",
+                    text: "Check out Misto — anonymous stories & chats",
+                    url: window.location.origin
+                }).catch(() => { })
+            } else {
+                navigator.clipboard.writeText(window.location.origin)
+                    .then(() => showToast("Link copied!"))
+                    .catch(() => { })
+            }
+        }
+    }
+
+    // External Link Handlers
+    const discordBtn = document.getElementById("discordBtn")
+    if (discordBtn) {
+        discordBtn.onclick = () => window.open("https://discord.gg/PhA4fxKv", "_blank")
+    }
+    const privacyBtn = document.getElementById("privacyBtn")
+    if (privacyBtn) {
+        privacyBtn.onclick = () => window.open("privacy.html", "_blank")
+    }
+    const termsBtn = document.getElementById("termsBtn")
+    if (termsBtn) {
+        termsBtn.onclick = () => window.open("terms.html", "_blank")
+    }
+
+    const onboarding = document.getElementById("onboardingScreen")
+    const isVerified = localStorage.getItem("is18Verified")
+
+    if (isVerified) {
+        onboarding.classList.add("hidden")
     } else {
-        modal.style.display = "flex"
+        onboarding.classList.remove("hidden")
     }
 
     setupViewerControls()
     loadMenuUser()
 })
 
-// SET GENDER
-window.setGender = function (g) {
-    localStorage.setItem("vanta_gender", g)
-    document.getElementById("genderModal").style.display = "none"
+let selectedOnboardingGender = null
+
+window.selectOnboardingGender = function (g) {
+    selectedOnboardingGender = g
+
+    // UI Update
+    document.querySelectorAll(".gender-card").forEach(c => c.classList.remove("active"))
+    document.getElementById(`gender-${g}`).classList.add("active")
+
+    toggleOnboardingCTA()
+}
+
+window.toggleOnboardingCTA = function () {
+    const is18 = document.getElementById("ageCheck").checked
+    const btn = document.getElementById("onboardingContinue")
+
+    if (selectedOnboardingGender && is18) {
+        btn.disabled = false
+    } else {
+        btn.disabled = true
+    }
+}
+
+window.submitOnboarding = function () {
+    const is18 = document.getElementById("ageCheck").checked
+
+    if (!selectedOnboardingGender || !is18) {
+        showToast("Please complete all fields")
+        return
+    }
+
+    // Save
+    localStorage.setItem("vanta_gender", selectedOnboardingGender)
+    localStorage.setItem("is18Verified", "true")
+
+    // Animate out
+    const screen = document.getElementById("onboardingScreen")
+    screen.classList.add("fade-out")
+
+    setTimeout(() => {
+        screen.classList.add("hidden")
+        loadStories()
+    }, 600)
 }
 
 
@@ -130,11 +240,11 @@ async function postStory() {
 
     document.getElementById("storyText").value = ""
     document.getElementById("storyImage").value = ""
-    
+
     // Reset duration selection
     selectedDuration = null
     document.querySelectorAll(".duration-btn").forEach(b => b.classList.remove("active-dur"))
-    
+
     // Hide upload box
     openUpload()
 
@@ -236,7 +346,7 @@ async function loadStories() {
 
     const unseen = Object.keys(users).filter(u => {
         if (u === "Misto Official") return !viewed[u];
-        
+
         const stories = users[u];
         return stories.some(s => {
             if (localSeen.includes(s.id)) return false;
@@ -259,18 +369,18 @@ async function loadStories() {
     const sortPriority = (arr) => arr.sort((a, b) => {
         if (a === "Misto Official") return -1
         if (b === "Misto Official") return 1
-        
+
         const aStories = users[a]
         const bStories = users[b]
-        
+
         const checkExclusive = (stories) => stories.some(s => {
             const diff = new Date(s.expires_at).getTime() - new Date(s.created_at).getTime()
             return diff < 7200000 // Less than 2 hours
         })
-        
+
         const aHasExclusive = checkExclusive(aStories)
         const bHasExclusive = checkExclusive(bStories)
-        
+
         if (aHasExclusive && !bHasExclusive) return -1
         if (!aHasExclusive && bHasExclusive) return 1
         return 0
@@ -287,7 +397,7 @@ async function loadStories() {
         const isUnseen = unseen.includes(user);
         const ring = isUnseen ? "unseen" : "seen";
         const stories = users[user]
-        
+
         const hasExclusive = stories.some(s => {
             const diff = new Date(s.expires_at).getTime() - new Date(s.created_at).getTime()
             return diff < 7200000 // Less than 2 hours
@@ -297,7 +407,7 @@ async function loadStories() {
 
             ? `<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: -2px; margin-left: 4px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
             : ""
-            
+
         const exclusiveBadge = hasExclusive ? `<span class="exclusive-badge">⚡ Exclusive</span>` : ""
 
         const latestStory = stories[stories.length - 1]
@@ -343,7 +453,7 @@ function openStory(story) {
     const officialBadge = story.username === "Misto Official"
         ? `<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px; margin-left: 4px; margin-right: 2px;"><path fill="#6366f1" d="M22.5 12.5l-2.1 2.3.5 3.1-3 .9-1.6 2.6-2.9-1.2L11 22.5l-2.4-2.3-2.9 1.2-1.6-2.6-3-.9.5-3.1L-.5 12.5l2.1-2.3-.5-3.1 3-.9 1.6-2.6 2.9 1.2L11 2.5l2.4 2.3 2.9-1.2 1.6 2.6 3 .9-.5 3.1z"/><path fill="#fff" d="M9.8 16.8l-4.2-4.2 1.4-1.4 2.8 2.8 7.1-7.1 1.4 1.4z"/></svg>`
         : ""
-        
+
     const durationMs = new Date(story.expires_at).getTime() - new Date(story.created_at).getTime()
     const isExclusive = durationMs < 7200000 // Less than 2 hours
     const exclusiveBadge = isExclusive ? `<span class="exclusive-badge">⚡ Exclusive</span>` : ""
@@ -526,12 +636,12 @@ function openStorySequence(stories, index) {
 function showStory() {
 
     const story = currentStories[currentIndex]
-    
+
     const localSeen = JSON.parse(localStorage.getItem("seenStoryIds")) || [];
     if (!localSeen.includes(story.id) && story.username !== username) {
         localSeen.push(story.id);
         localStorage.setItem("seenStoryIds", JSON.stringify(localSeen));
-        
+
         const unseenRemaining = currentStories.some(s => !localSeen.includes(s.id));
         if (!unseenRemaining) {
             document.querySelectorAll(".status-item").forEach(item => {
@@ -725,7 +835,7 @@ function setupViewerControls() {
         reactPanel.addEventListener("touchstart", (e) => {
             startY = e.touches[0].clientY
         }, { passive: true })
-        
+
         reactPanel.addEventListener("touchend", (e) => {
             endY = e.changedTouches[0].clientY
             const deltaY = endY - startY
@@ -748,7 +858,7 @@ function closeReactionPanel() {
     const panel = document.getElementById("reactionPanel");
     if (panel) panel.classList.remove("active");
     if (document.getElementById("viewer") && !document.getElementById("viewer").classList.contains("hidden")) {
-       resumeStory();
+        resumeStory();
     }
 }
 
@@ -1001,7 +1111,7 @@ async function clearChatMessages(convoId) {
             let arr = m.cleared_by || []
             if (!arr.includes(username)) {
                 arr.push(username)
-                
+
                 // If both users have cleared it (or it's the only 2 users), delete it completely to save space
                 if (arr.length >= 2) {
                     client.from("messages").delete().eq("id", m.id).then()
@@ -1068,8 +1178,8 @@ async function sendReaction(emoji) {
         .select("viewers")
         .eq("id", story.id)
         .single();
-        
-    let viewers = (data?.viewers || []).map(v => 
+
+    let viewers = (data?.viewers || []).map(v =>
         typeof v === "string" ? { username: v, time: new Date().toISOString(), reaction: null } : v
     );
 
@@ -1082,7 +1192,7 @@ async function sendReaction(emoji) {
     }
 
     await client.from("stories").update({ viewers }).eq("id", story.id);
-    
+
     // Update local state so it renders correctly if viewer list is opened
     currentViewers = viewers;
 
@@ -1093,9 +1203,9 @@ async function sendReaction(emoji) {
 function playReactionAnim(emoji) {
     const container = document.getElementById("reactionAnimationContainer");
     if (!container) return;
-    
+
     const count = Math.floor(Math.random() * 3) + 3; // 3 to 5 emojis
-    
+
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const el = document.createElement("div");
@@ -1104,13 +1214,13 @@ function playReactionAnim(emoji) {
             // Random horizontal drift between -30px and 30px
             const dx = (Math.random() - 0.5) * 60;
             el.style.setProperty("--dx", `${dx}px`);
-            
+
             // Randomly scale starting size a bit
             const scale = 0.8 + Math.random() * 0.4;
             el.style.transform = `translateX(-50%) translateY(0) scale(${scale})`;
-            
+
             container.appendChild(el);
-            
+
             setTimeout(() => {
                 if (el.parentNode) el.remove();
             }, 1200);
@@ -1125,7 +1235,7 @@ async function checkAndSendReactionMessage(receiver, emoji) {
         .select("id")
         .or(`and(user1.eq.${username},user2.eq.${receiver}),and(user1.eq.${receiver},user2.eq.${username})`)
         .single();
-        
+
     if (convo && convo.id) {
         // Conversation exists! Send reaction message
         await client.from("messages").insert({
@@ -1271,7 +1381,7 @@ async function loadMessages() {
 
 async function exitChat() {
     const convoId = localStorage.getItem("chat_id");
-    
+
     // UI Fade Out
     document.querySelectorAll(".message-wrapper").forEach(msg => {
         msg.style.transition = "opacity 0.25s ease-out";
@@ -1318,6 +1428,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadChats()
     } else if (window.location.pathname.includes("chat.html")) {
         const cid = localStorage.getItem("chat_id")
+        currentChatId = cid;
 
         // Vanishing Mode: Cleanup on enter and exit
         clearChatMessages(cid)
@@ -1341,7 +1452,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         event: 'typing',
                         payload: { user: username }
                     });
-                    
+
                     clearTimeout(sendTypingTimeout);
                     sendTypingTimeout = setTimeout(() => {
                         msgChannel.send({
@@ -1418,7 +1529,95 @@ document.addEventListener("DOMContentLoaded", () => {
         checkUnreadGlobal()
         setInterval(checkUnreadGlobal, 5000)
     }
+
+    // Global Notification Listener
+    initGlobalNotificationListener();
+
+    // Enable Audio on First Interaction (Standard mobile requirement)
+    document.body.addEventListener("click", () => {
+        messageSound.play().then(() => {
+            messageSound.pause();
+            messageSound.currentTime = 0;
+            console.log("Audio unlocked");
+        }).catch(err => console.log("Audio unlock failed:", err));
+    }, { once: true });
 })
+
+// ================== NOTIFICATIONS ==================
+
+function playMessageSound() {
+    const isNotificationsOn = localStorage.getItem("notifications") === "true";
+    if (!isNotificationsOn) return;
+
+    const now = Date.now();
+    if (now - lastSoundTime > 1000) { // 1s debounce
+        messageSound.currentTime = 0;
+        messageSound.play()
+            .then(() => console.log("Notification sound played successfully"))
+            .catch(err => console.error("Notification sound play failed:", err));
+        lastSoundTime = now;
+    }
+}
+
+function playTestSound() {
+    console.log("Testing notification sound...");
+    messageSound.currentTime = 0;
+    messageSound.play()
+        .then(() => showToast("Sound playing!"))
+        .catch(err => {
+            console.error("Test sound failed:", err);
+            showToast("Click anywhere first to enable audio!");
+        });
+}
+
+function initGlobalNotificationListener() {
+    console.log("Initializing Global Notification Listener...");
+
+    // 1. Normal Messages Listener
+    client
+        .channel('public:messages:global')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages'
+        }, (payload) => {
+            const msg = payload.new;
+            const isMyMessage = msg.sender === username;
+            const isNotificationsOn = localStorage.getItem("notifications") === "true";
+            const isInSameChat = (msg.conversation_id == currentChatId);
+
+            if (!isMyMessage && isNotificationsOn && !isInSameChat) {
+                console.log("New normal message notification!");
+                playMessageSound();
+                const dot = document.getElementById("unreadDot");
+                if (dot) dot.classList.remove("hidden");
+            }
+        })
+        .subscribe((status) => console.log("Global Messages Subscription:", status));
+
+    // 2. Random Messages Listener
+    client
+        .channel('public:random_messages:global')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'random_messages'
+        }, (payload) => {
+            const msg = payload.new;
+            const isMyMessage = msg.sender === username;
+            const isNotificationsOn = localStorage.getItem("notifications") === "true";
+
+            // For random messages, currentChatId is compared against session_id
+            const currentSessionId = localStorage.getItem("misto_random_session");
+            const isInSameChat = (msg.session_id === currentSessionId && window.location.pathname.includes("randomChat.html"));
+
+            if (!isMyMessage && isNotificationsOn && !isInSameChat) {
+                console.log("New random message notification!");
+                playMessageSound();
+            }
+        })
+        .subscribe((status) => console.log("Global Random Messages Subscription:", status));
+}
 
 // INIT
 loadStories()
