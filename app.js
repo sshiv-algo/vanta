@@ -54,6 +54,7 @@ const DP_COLORS = [
 if (!localStorage.getItem("vanta_dp_color")) {
     const col = DP_COLORS[Math.floor(Math.random() * DP_COLORS.length)]
     localStorage.setItem("vanta_dp_color", col)
+}
 const dpColor = localStorage.getItem("vanta_dp_color")
 
 // Deterministic DP color helper (consistent across app, status bar, and viewer)
@@ -1444,12 +1445,7 @@ async function skipChat() {
     window.location.href = "random.html"
 }
 
-async function exitChat() {
-    const convoId = localStorage.getItem("chat_id")
-    await clearChatMessages(convoId)
-    localStorage.removeItem("misto_random")
-    window.location.href = "inbox.html"
-}
+
 
 // ================== STORY REACTIONS ==================
 
