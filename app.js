@@ -463,17 +463,47 @@ function openStory(story) {
         `${story.username}${officialBadge}${exclusiveBadge} • ${timeText}`
 
 
-    let content = ""
-    if (story.media_url) {
-        content += `<img src="${story.media_url}" class="story-media">`
-    }
-    if (story.text_content) {
-        // If there's an image, style it as a caption overlay. If text only, style as full centered text.
-        const textClass = story.media_url ? "story-caption" : "story-text"
-        content += `<div class="${textClass}">${story.text_content}</div>`
+    const viewerText = document.getElementById("viewerText")
+
+    const renderContent = () => {
+        let content = ""
+        if (story.media_url) {
+            content += `<img src="${story.media_url}" class="story-media">`
+        }
+        if (story.text_content) {
+            // If there's an image, style it as a caption overlay. If text only, style as full centered text.
+            const textClass = story.media_url ? "story-caption" : "story-text"
+            content += `<div class="${textClass}">${story.text_content}</div>`
+        }
+        viewerText.innerHTML = content
     }
 
-    document.getElementById("viewerText").innerHTML = content
+    if (story.media_url) {
+        // Preload image so it appears instantly when injected
+        const preloader = new Image()
+        preloader.src = story.media_url
+        if (preloader.complete) {
+            renderContent()
+        } else {
+            viewerText.innerHTML = "" // clear while loading
+            let rendered = false
+            preloader.onload = () => { if (!rendered) { rendered = true; renderContent() } }
+            preloader.onerror = () => { if (!rendered) { rendered = true; renderContent() } }
+            // Fallback: show after 4s max regardless
+            setTimeout(() => { if (!rendered) { rendered = true; renderContent() } }, 4000)
+        }
+    } else {
+        renderContent()
+    }
+
+    // Preload next story image in background for instant transition
+    if (currentStories && currentIndex + 1 < currentStories.length) {
+        const nextStory = currentStories[currentIndex + 1]
+        if (nextStory && nextStory.media_url) {
+            const nextPreloader = new Image()
+            nextPreloader.src = nextStory.media_url
+        }
+    }
 
     // REPLY BOX
     const replyBox = document.getElementById("replyBox")
