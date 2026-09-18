@@ -299,9 +299,46 @@ window.logout = async function () {
     window.location.href = "index.html"
 }
 
+const DP_COLORS = [
+    "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e",
+    "#f97316", "#eab308", "#22c55e", "#14b8a6",
+    "#06b6d4", "#3b82f6", "#a855f7", "#e11d48"
+]
+
+function getUserColor(name) {
+    if (!name) return "#6366f1"
+    const currentName = localStorage.getItem("vanta_username") || username
+    if (name === currentName) {
+        return localStorage.getItem("vanta_dp_color") || "#6366f1"
+    }
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff
+    }
+    return DP_COLORS[Math.abs(hash) % DP_COLORS.length]
+}
+
+function getRenameCount() {
+    return parseInt(sessionStorage.getItem("vanta_rename_count") || "0", 10)
+}
+
+function updateRenameCountBadge() {
+    const badge = document.getElementById("renameCountBadge")
+    if (!badge) return
+    const count = getRenameCount()
+    const remaining = Math.max(0, 2 - count)
+    if (remaining === 0) {
+        badge.innerText = "No changes left this session"
+        badge.classList.add("limit-reached")
+    } else {
+        badge.innerText = `${remaining} change${remaining === 1 ? '' : 's'} left this session`
+        badge.classList.remove("limit-reached")
+    }
+}
+
 function loadMenuUser() {
-    const u = localStorage.getItem("vanta_username")
-    const color = localStorage.getItem("vanta_dp_color") || "#6366f1"
+    const u = localStorage.getItem("vanta_username") || username
+    const color = getUserColor(u)
     if (u) {
         const uEl = document.getElementById("menuUsername")
         const aEl = document.getElementById("menuAvatar")
@@ -311,6 +348,71 @@ function loadMenuUser() {
             aEl.style.background = color
         }
     }
+    updateRenameCountBadge()
+}
+
+window.startEditUsername = function() {
+    const count = getRenameCount()
+    if (count >= 2) {
+        if (window.showToast) showToast("You can only change your username 2 times per session.")
+        return
+    }
+    const displayRow = document.getElementById("usernameDisplayRow")
+    const editRow = document.getElementById("usernameEditRow")
+    const input = document.getElementById("usernameEditInput")
+    if (!displayRow || !editRow || !input) return
+
+    input.value = username || localStorage.getItem("vanta_username") || ""
+    displayRow.classList.add("hidden")
+    editRow.classList.remove("hidden")
+    input.focus()
+    input.onkeypress = (e) => {
+        if (e.key === "Enter") window.saveUsernameEdit()
+    }
+}
+
+window.cancelUsernameEdit = function() {
+    const displayRow = document.getElementById("usernameDisplayRow")
+    const editRow = document.getElementById("usernameEditRow")
+    if (displayRow && editRow) {
+        displayRow.classList.remove("hidden")
+        editRow.classList.add("hidden")
+    }
+}
+
+window.saveUsernameEdit = async function() {
+    const input = document.getElementById("usernameEditInput")
+    if (!input) return
+    const newName = input.value.trim()
+    if (!newName) {
+        if (window.showToast) showToast("Username cannot be empty")
+        return
+    }
+    const currentU = localStorage.getItem("vanta_username")
+    if (newName === currentU) {
+        window.cancelUsernameEdit()
+        return
+    }
+    if (newName.length < 3) {
+        if (window.showToast) showToast("Username must be at least 3 characters")
+        return
+    }
+
+    const count = getRenameCount()
+    if (count >= 2) {
+        if (window.showToast) showToast("Limit reached: max 2 changes per session.")
+        window.cancelUsernameEdit()
+        return
+    }
+
+    localStorage.setItem("vanta_username", newName)
+    const newCount = count + 1
+    sessionStorage.setItem("vanta_rename_count", newCount.toString())
+
+    window.cancelUsernameEdit()
+    loadMenuUser()
+
+    if (window.showToast) showToast("Username updated to " + newName)
 }
 
 // ==========================================

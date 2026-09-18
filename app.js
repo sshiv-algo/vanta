@@ -54,8 +54,21 @@ const DP_COLORS = [
 if (!localStorage.getItem("vanta_dp_color")) {
     const col = DP_COLORS[Math.floor(Math.random() * DP_COLORS.length)]
     localStorage.setItem("vanta_dp_color", col)
-}
 const dpColor = localStorage.getItem("vanta_dp_color")
+
+// Deterministic DP color helper (consistent across app, status bar, and viewer)
+function getUserColor(name) {
+    if (!name) return "#6366f1"
+    const currentName = localStorage.getItem("vanta_username") || username
+    if (name === currentName) {
+        return localStorage.getItem("vanta_dp_color") || "#6366f1"
+    }
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff
+    }
+    return DP_COLORS[Math.abs(hash) % DP_COLORS.length]
+}
 
 // Unique per-tab session ID (sessionStorage so different tabs get different IDs)
 if (!sessionStorage.getItem("vanta_session_id")) {
@@ -162,6 +175,8 @@ async function claimUsername() {
     await claimUsername()
     // Start heartbeat after claim
     setInterval(heartbeat, 60000)
+    // Update menu UI as soon as username is claimed
+    loadMenuUser()
 })()
 
 
@@ -399,10 +414,11 @@ async function loadStories() {
     if (yourStories.length > 0) {
         const latestYourStory = yourStories[yourStories.length - 1]
         const yourTime = formatTime(latestYourStory.created_at)
+        const myColor = getUserColor(username)
 
         yourDiv.innerHTML = `
         <div style="position:relative;">
-            <div class="status-circle">${username[0]}</div>
+            <div class="status-circle" style="background:${myColor};color:#fff;border:none;">${username ? username[0].toUpperCase() : 'U'}</div>
 
             <!-- ➕ BUTTON -->
             <div class="add-btn">+</div>
@@ -424,9 +440,9 @@ async function loadStories() {
         }
 
     } else {
-
+        const myColor = getUserColor(username)
         yourDiv.innerHTML = `
-        <div class="status-circle plus">+</div>
+        <div class="status-circle plus" style="background:${myColor}18;color:${myColor};border:2px dashed ${myColor};">+</div>
         <div class="status-text">
             <b>Your Story</b>
             <p>Tap to add</p>
@@ -527,11 +543,12 @@ async function loadStories() {
         const latestStory = stories[stories.length - 1]
         const timeStr = formatTime(latestStory.created_at)
 
+        const userColor = getUserColor(user)
         const div = document.createElement("div")
         div.className = "status-item" + (hasExclusive ? " exclusive-story" : "")
 
         div.innerHTML = `
-            <div class="status-circle ${ring}">${user[0]}</div>
+            <div class="status-circle ${ring}" style="background:${userColor};color:#fff;">${user[0].toUpperCase()}</div>
             <div class="status-text">
                 <b>${user}${officialBadge}${exclusiveBadge}</b>
                 <p>View story • ${timeStr}</p>
@@ -572,9 +589,9 @@ function openStory(story) {
     const isExclusive = durationMs < 7200000 // Less than 2 hours
     const exclusiveBadge = isExclusive ? `<span class="exclusive-badge">⚡ Exclusive</span>` : ""
 
+    const storyUserColor = getUserColor(story.username)
     document.getElementById("viewerUser").innerHTML =
-
-        `${story.username}${officialBadge}${exclusiveBadge} • ${timeText}`
+        `<div class="story-header-avatar" style="background:${storyUserColor}">${story.username ? story.username[0].toUpperCase() : '?'}</div><span>${story.username}${officialBadge}${exclusiveBadge} • ${timeText}</span>`
 
 
     const viewerText = document.getElementById("viewerText")
@@ -1112,16 +1129,138 @@ function openUpload() {
     document.getElementById("uploadBox").classList.toggle("hidden")
 }
 
+function getRenameCount() {
+    return parseInt(sessionStorage.getItem("vanta_rename_count") || "0", 10)
+}
+
+function updateRenameCountBadge() {
+    const badge = document.getElementById("renameCountBadge")
+    if (!badge) return
+    const count = getRenameCount()
+    const remaining = Math.max(0, 2 - count)
+    if (remaining === 0) {
+        badge.innerText = "No changes left this session"
+        badge.classList.add("limit-reached")
+    } else {
+        badge.innerText = `${remaining} change${remaining === 1 ? '' : 's'} left this session`
+        badge.classList.remove("limit-reached")
+    }
+}
+
 function loadMenuUser() {
-    const u = localStorage.getItem("vanta_username")
-    const color = localStorage.getItem("vanta_dp_color") || "#6366f1"
+    const u = localStorage.getItem("vanta_username") || username
+    const color = getUserColor(u)
     if (!u) return
     const usernameEl = document.getElementById("menuUsername")
     const avatarEl = document.getElementById("menuAvatar")
-    if (usernameEl) usernameEl.innerText = u
+    if (usernameEl && !document.getElementById("usernameEditInput")?.value) usernameEl.innerText = u
     if (avatarEl) {
         avatarEl.innerText = u[0].toUpperCase()
         avatarEl.style.background = color
+    }
+    updateRenameCountBadge()
+}
+
+window.startEditUsername = function() {
+    const count = getRenameCount()
+    if (count >= 2) {
+        if (window.showToast) showToast("You can only change your username 2 times per session.")
+        return
+    }
+    const displayRow = document.getElementById("usernameDisplayRow")
+    const editRow = document.getElementById("usernameEditRow")
+    const input = document.getElementById("usernameEditInput")
+    if (!displayRow || !editRow || !input) return
+
+    input.value = username || localStorage.getItem("vanta_username") || ""
+    displayRow.classList.add("hidden")
+    editRow.classList.remove("hidden")
+    input.focus()
+    input.onkeypress = (e) => {
+        if (e.key === "Enter") window.saveUsernameEdit()
+    }
+}
+
+window.cancelUsernameEdit = function() {
+    const displayRow = document.getElementById("usernameDisplayRow")
+    const editRow = document.getElementById("usernameEditRow")
+    if (displayRow && editRow) {
+        displayRow.classList.remove("hidden")
+        editRow.classList.add("hidden")
+    }
+}
+
+window.saveUsernameEdit = async function() {
+    const input = document.getElementById("usernameEditInput")
+    if (!input) return
+    const newName = input.value.trim()
+    if (!newName) {
+        if (window.showToast) showToast("Username cannot be empty")
+        return
+    }
+    if (newName === username) {
+        window.cancelUsernameEdit()
+        return
+    }
+    if (newName.length < 3) {
+        if (window.showToast) showToast("Username must be at least 3 characters")
+        return
+    }
+
+    const count = getRenameCount()
+    if (count >= 2) {
+        if (window.showToast) showToast("Limit reached: max 2 changes per session.")
+        window.cancelUsernameEdit()
+        return
+    }
+
+    const oldName = username
+    try {
+        if (oldName) await releaseSession(oldName)
+
+        const STALE_MS = 5 * 60 * 1000
+        const { data: existing } = await client
+            .from("active_sessions")
+            .select("session_id, last_seen")
+            .eq("username", newName)
+            .single()
+
+        if (existing && existing.session_id !== sessionId) {
+            const age = Date.now() - new Date(existing.last_seen).getTime()
+            if (age < STALE_MS) {
+                if (oldName) {
+                    await client.from("active_sessions").upsert(
+                        { username: oldName, session_id: sessionId, last_seen: new Date().toISOString() },
+                        { onConflict: "username" }
+                    )
+                }
+                if (window.showToast) showToast("Username '" + newName + "' is currently taken.")
+                return
+            }
+        }
+
+        await client.from("active_sessions").upsert(
+            { username: newName, session_id: sessionId, last_seen: new Date().toISOString() },
+            { onConflict: "username" }
+        )
+
+        username = newName
+        localStorage.setItem("vanta_username", username)
+
+        const newCount = count + 1
+        sessionStorage.setItem("vanta_rename_count", newCount.toString())
+
+        window.cancelUsernameEdit()
+        loadMenuUser()
+        if (typeof loadStories === "function") loadStories()
+
+        if (window.showToast) showToast("Username updated to " + username)
+    } catch (e) {
+        console.error("Rename error:", e)
+        username = newName
+        localStorage.setItem("vanta_username", username)
+        window.cancelUsernameEdit()
+        loadMenuUser()
     }
 }
 
