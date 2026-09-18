@@ -400,7 +400,19 @@ window.toggleMenu = function () {
     document.getElementById("overlay")?.classList.toggle("active");
 };
 
-window.logout = function () {
+window.logout = async function () {
+    const u = localStorage.getItem("vanta_username");
+    const sid = sessionStorage.getItem("vanta_session_id");
+    if (u && sid) {
+        try {
+            const { createClient } = supabase;
+            const _client = createClient(
+                "https://rgfwsxrjwnzfbxpyywqg.supabase.co",
+                "sb_publishable_Uk36ksZrA4Gimw3ir5JFDQ_U1wcCwtr"
+            );
+            await _client.from("active_sessions").delete().eq("username", u).eq("session_id", sid);
+        } catch (_) { }
+    }
     localStorage.clear();
     window.location.href = "index.html";
 };
@@ -441,11 +453,15 @@ inputEl?.addEventListener("keypress", (e) => {
 // ==========================================
 async function runInit() {
     const u = localStorage.getItem("vanta_username");
+    const color = localStorage.getItem("vanta_dp_color") || "#6366f1";
     if (u) {
         const uEl = document.getElementById("menuUsername");
         const aEl = document.getElementById("menuAvatar");
         if (uEl) uEl.innerText = u;
-        if (aEl) aEl.innerText = u[0].toUpperCase();
+        if (aEl) {
+            aEl.innerText = u[0].toUpperCase();
+            aEl.style.background = color;
+        }
     }
 
     // Initialize Audio for testing

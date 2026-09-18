@@ -41,14 +41,128 @@ const supabaseKey = "sb_publishable_Uk36ksZrA4Gimw3ir5JFDQ_U1wcCwtr"
 const client = supabase.createClient(supabaseUrl, supabaseKey)
 
 
-// ================== USERNAME ==================
+// ================== USERNAME + SESSION ==================
+
+// Curated palette of vivid avatar colours (stored once, persists across sessions)
+const DP_COLORS = [
+    "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e",
+    "#f97316", "#eab308", "#22c55e", "#14b8a6",
+    "#06b6d4", "#3b82f6", "#a855f7", "#e11d48"
+]
+
+// Assign / recall dp colour
+if (!localStorage.getItem("vanta_dp_color")) {
+    const col = DP_COLORS[Math.floor(Math.random() * DP_COLORS.length)]
+    localStorage.setItem("vanta_dp_color", col)
+}
+const dpColor = localStorage.getItem("vanta_dp_color")
+
+// Unique per-tab session ID (sessionStorage so different tabs get different IDs)
+if (!sessionStorage.getItem("vanta_session_id")) {
+    sessionStorage.setItem("vanta_session_id", crypto.randomUUID())
+}
+const sessionId = sessionStorage.getItem("vanta_session_id")
 
 let username = localStorage.getItem("vanta_username")
 
-if (!username || username === "null" || username === "undefined") {
+// Release this user's session from active_sessions (call on logout / tab close)
+async function releaseSession(name) {
+    if (!name) return
+    try {
+        await client
+            .from("active_sessions")
+            .delete()
+            .eq("username", name)
+            .eq("session_id", sessionId)
+    } catch (_) { }
+}
+
+// Heartbeat: keep last_seen fresh every 60 s so the name stays reserved
+async function heartbeat() {
+    if (!username) return
+    try {
+        await client
+            .from("active_sessions")
+            .upsert({ username, session_id: sessionId, last_seen: new Date().toISOString() },
+                    { onConflict: "username" })
+    } catch (_) { }
+}
+
+// Release session when tab is closed / refreshed
+window.addEventListener("beforeunload", () => {
+    // Use sendBeacon for best-effort fire-and-forget on unload
+    const url = `${supabaseUrl}/rest/v1/active_sessions?username=eq.${encodeURIComponent(username)}&session_id=eq.${encodeURIComponent(sessionId)}`
+    navigator.sendBeacon && navigator.sendBeacon(
+        url + "&_method=DELETE",
+        JSON.stringify({})
+    )
+    // Also do a synchronous fetch as fallback (Chrome allows keepalive)
+    try {
+        fetch(url, {
+            method: "DELETE",
+            keepalive: true,
+            headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`
+            }
+        })
+    } catch (_) { }
+})
+
+// Claim a unique username: check active_sessions, retry until free
+async function claimUsername() {
+    // A name is "taken" if it has a row with last_seen in the past 5 minutes
+    const STALE_MS = 5 * 60 * 1000
+
+    for (let attempt = 0; attempt < 15; attempt++) {
+        const candidate = username && attempt === 0 ? username : generateUsername()
+
+        try {
+            const { data } = await client
+                .from("active_sessions")
+                .select("session_id, last_seen")
+                .eq("username", candidate)
+                .single()
+
+            if (data) {
+                const age = Date.now() - new Date(data.last_seen).getTime()
+                const sameTab = data.session_id === sessionId
+
+                if (!sameTab && age < STALE_MS) {
+                    // Name is actively taken by another session — try another
+                    username = null
+                    continue
+                }
+            }
+
+            // Name is free (or stale / same tab) — claim it
+            await client
+                .from("active_sessions")
+                .upsert({ username: candidate, session_id: sessionId, last_seen: new Date().toISOString() },
+                        { onConflict: "username" })
+
+            username = candidate
+            localStorage.setItem("vanta_username", username)
+            return
+        } catch (_) {
+            // If table doesn't exist yet / network issue, just fall back gracefully
+            if (!username) username = generateUsername()
+            localStorage.setItem("vanta_username", username)
+            return
+        }
+    }
+
+    // All retries exhausted — generate a fresh name
     username = generateUsername()
     localStorage.setItem("vanta_username", username)
 }
+
+// Kick off immediately (top-level await not available, so wrap)
+;(async () => {
+    await claimUsername()
+    // Start heartbeat after claim
+    setInterval(heartbeat, 60000)
+})()
 
 
 // ================== GENDER ==================
@@ -979,8 +1093,9 @@ setInterval(loadStories, 60000)
 
 // ================== LOGOUT ==================
 
-window.logout = function () {
-    console.log("Logout clicked") // debug
+window.logout = async function () {
+    console.log("Logout clicked")
+    await releaseSession(username)  // free the username immediately
     localStorage.clear()
     window.location.href = "index.html"
 }
@@ -999,9 +1114,15 @@ function openUpload() {
 
 function loadMenuUser() {
     const u = localStorage.getItem("vanta_username")
+    const color = localStorage.getItem("vanta_dp_color") || "#6366f1"
     if (!u) return
-    document.getElementById("menuUsername").innerText = u
-    document.getElementById("menuAvatar").innerText = u[0].toUpperCase()
+    const usernameEl = document.getElementById("menuUsername")
+    const avatarEl = document.getElementById("menuAvatar")
+    if (usernameEl) usernameEl.innerText = u
+    if (avatarEl) {
+        avatarEl.innerText = u[0].toUpperCase()
+        avatarEl.style.background = color
+    }
 }
 
 

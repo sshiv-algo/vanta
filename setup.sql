@@ -71,3 +71,26 @@ EXCEPTION
     WHEN OTHERS THEN
         RAISE NOTICE 'Could not add tables to publication. Ensure publication "supabase_realtime" exists.';
 END $$;
+
+
+-- ==========================================
+-- ACTIVE SESSIONS TABLE (Username uniqueness)
+-- Run this in Supabase SQL Editor
+-- ==========================================
+
+-- 9. Create active_sessions table for tracking online users
+CREATE TABLE IF NOT EXISTS active_sessions (
+    username text PRIMARY KEY,
+    session_id text NOT NULL,
+    last_seen timestamp with time zone DEFAULT now()
+);
+
+-- 10. Enable RLS
+ALTER TABLE active_sessions ENABLE ROW LEVEL SECURITY;
+
+-- 11. RLS Policy: Allow all
+DROP POLICY IF EXISTS "Allow all access to active_sessions" ON active_sessions;
+CREATE POLICY "Allow all access to active_sessions" ON active_sessions FOR ALL USING (true) WITH CHECK (true);
+
+-- 12. Index on last_seen for efficient cleanup queries
+CREATE INDEX IF NOT EXISTS idx_active_sessions_last_seen ON active_sessions(last_seen);
